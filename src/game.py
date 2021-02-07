@@ -24,34 +24,61 @@ from pygame.locals import (
    K_RIGHT,    # RIGHT Key
    K_ESCAPE,   # ESC Key
    K_SPACE,    # Space Key
-   K_KP_PLUS,  # Plus Key (numpad)
-   K_KP_MINUS, # Minus Key (numpad)
+   K_w,        # W Key
+   K_s,        # S Key
+   K_a,        # A Key
+   K_d,        # D Key
    KEYDOWN,    # Keypress Event
    QUIT        # Quit Event
 )
 
 #------------------------------
-# Constants
+# Defines
 #------------------------------
 
 # Define constants for the screen width and height
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# Test Object Coords
-OBJ_Y = SCREEN_HEIGHT / 2
-OBJ_X = SCREEN_WIDTH / 2
+# Test Object Length/Width Size (pixels)
+OBJ_LENGTH = 75
+OBJ_WIDTH = 25
 
-# Test Object Radius (pixels)
-OBJ_RADIUS = 75
-
-# Test Object Radius Resize Step
-OBJ_RAD_STEP = 5
+# Test Object Move Step
+OBJ_MOVE_STEP = 1
 
 # Test Object Color
 OBJ_R = 0
 OBJ_G = 0
 OBJ_B = 255
+
+class Player(pygame.sprite.Sprite):
+   def __init__(self):
+      super(Player, self).__init__()
+      self.surf = pygame.Surface((OBJ_LENGTH, OBJ_WIDTH))
+      self.surf.fill((OBJ_R, OBJ_G, OBJ_B))
+      self.rect = self.surf.get_rect()
+
+   # Move the Player based on user input
+   def update(self, pressed_keys):
+      if pressed_keys[K_UP] | pressed_keys[K_w]:
+         self.rect.move_ip(0, -OBJ_MOVE_STEP)
+      if pressed_keys[K_DOWN] | pressed_keys[K_s]:
+         self.rect.move_ip(0, OBJ_MOVE_STEP)
+      if pressed_keys[K_LEFT] | pressed_keys[K_a]:
+         self.rect.move_ip(-OBJ_MOVE_STEP, 0)
+      if pressed_keys[K_RIGHT] | pressed_keys[K_d]:
+         self.rect.move_ip(OBJ_MOVE_STEP, 0)
+
+      # Keep the Player on the screen
+      if self.rect.left <= 0:
+         self.rect.left = 0
+      if self.rect.right >= SCREEN_WIDTH:
+         self.rect.right = SCREEN_WIDTH
+      if self.rect.top <= 0:
+         self.rect.top = 0
+      if self.rect.bottom >= SCREEN_HEIGHT:
+         self.rect.bottom = SCREEN_HEIGHT
 
 #------------------------------
 # Core Logic
@@ -62,6 +89,9 @@ pygame.init()
 
 # Create the screen object
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Instantiate the player object
+player = Player()
 
 # Variable to keep the main loop running
 running = True
@@ -76,40 +106,21 @@ while running:
          # Handle ESC keypress
          if event.key == K_ESCAPE:
             running = False
-         # Handle UP keypress
-         elif event.key == K_UP:
-            OBJ_Y -= OBJ_RADIUS
-         # Handle DOWN keypress
-         elif event.key == K_DOWN:
-            OBJ_Y += OBJ_RADIUS
-         # Handle LEFT keypress
-         elif event.key == K_LEFT:
-            OBJ_X -= OBJ_RADIUS
-         # Handle RIGHT keypress
-         elif event.key == K_RIGHT:
-            OBJ_X += OBJ_RADIUS
-         # Handle SPACE keypress
-         elif event.key == K_SPACE:
-            # Set the RGB value of the object to a random value between 0 and 255
-            OBJ_R = random.randint(0, 255)
-            OBJ_G = random.randint(0, 255)
-            OBJ_B = random.randint(0, 255)
-         # Handle PLUS keypress
-         elif event.key == K_KP_PLUS:
-            OBJ_RADIUS += OBJ_RAD_STEP
-         # Handle MINUS keypress
-         elif event.key == K_KP_MINUS:
-            if OBJ_RADIUS > OBJ_RAD_STEP:
-               OBJ_RADIUS -= OBJ_RAD_STEP
-      # Dis the user close the window?
+      # Did the user close the window?
       elif event.type == pygame.QUIT:
          running = False
 
-   # Fill the background
-   screen.fill((255, 255, 255))
+   # Get all the keys currently pressed
+   pressed_keys = pygame.key.get_pressed()
 
-   # Draw a solid blue circle in the center
-   pygame.draw.circle(screen, (OBJ_R, OBJ_G, OBJ_B), (OBJ_X, OBJ_Y), OBJ_RADIUS)
+   # Update the player sprite based on user input
+   player.update(pressed_keys)
+
+   # Fill the background
+   screen.fill((0, 0, 0))
+
+   # Draw the surface to the screen
+   screen.blit(player.surf, player.rect)
 
    # Flip (redraw) the display
    pygame.display.flip()

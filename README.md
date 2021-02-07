@@ -19,8 +19,8 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Exit the game loop based on user input
 
 3) Sprites and Movement
-- [ ] Draw a sprite to the screen
-- [ ] Move the sprite around based on user input
+- [x] Draw a sprite to the screen
+- [x] Move the sprite around based on user input
 
 4) Interaction
 - [ ] Add more objects to the screen
