@@ -7,10 +7,10 @@ All assets are either "hand-drwan" or sourced from https://opengameart.org/
 
 # PyGame Tutorial Goals
 1) The Absolute Basics
-- [ ] Set up and draw a fixed size window
-- [ ] Define the game loop
-- [ ] Change the background color
-- [ ] Draw some shapes to the window
+- [x] Set up and draw a fixed size window
+- [x] Define the game loop
+- [x] Change the background color
+- [x] Draw some shapes to the window
 
 2) Handle User Input
 - [ ] Get user input from keyboard
