@@ -3,7 +3,7 @@ Welcome! I'm exploring how to create video games in Python using Pygame!
 
 I'll be using the following tutorial as an introductory guide: https://realpython.com/pygame-a-primer/
 
-All assets are either "hand-drwan" or sourced from https://opengameart.org/
+All assets are either "hand-drawn" or sourced from https://opengameart.org/
 
 # PyGame Tutorial Goals
 1) The Absolute Basics
