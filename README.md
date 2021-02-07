@@ -13,10 +13,10 @@ All assets are either "hand-drwan" or sourced from https://opengameart.org/
 - [x] Draw some shapes to the window
 
 2) Handle User Input
-- [ ] Get user input from keyboard
-- [ ] Add event handling
-- [ ] Dynamically update screen based on user input
-- [ ] Exit the game loop based on user input
+- [x] Get user input from keyboard
+- [x] Add event handling
+- [x] Dynamically update screen based on user input
+- [x] Exit the game loop based on user input
 
 3) Sprites and Movement
 - [ ] Draw a sprite to the screen
@@ -36,3 +36,12 @@ All assets are either "hand-drwan" or sourced from https://opengameart.org/
 
 7) Sound
 - [ ] Import sound assets and tie to specific events
+
+8) Refactor
+- [ ] Refactor the game to better learn Python and use proper coding practices
+
+9) Customize
+- [ ] Add a custom feature to the game!
+
+# Postmortem
+TODO: Discuss what went well, what didn't go well, and any lessons learned.
