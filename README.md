@@ -23,9 +23,9 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Move the sprite around based on user input
 
 4) Interaction
-- [ ] Add more objects to the screen
-- [ ] Interact with objects on screen
-- [ ] Collision detection and handling
+- [x] Add more objects to the screen
+- [x] Interact with objects on screen
+- [x] Collision detection and handling
 
 5) Importing Assets
 - [ ] Use art assets in place of simple "hand-drawn" sprites
