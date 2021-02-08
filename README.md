@@ -28,11 +28,11 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Collision detection and handling
 
 5) Importing Assets
-- [ ] Use art assets in place of simple "hand-drawn" sprites
+- [x] Use art assets in place of simple "hand-drawn" sprites
 - [ ] Import a background image
 
 6) Timing
-- [ ] Adjust game clock to set desired framerate
+- [x] Adjust game clock to set desired framerate
 
 7) Sound
 - [ ] Import sound assets and tie to specific events
