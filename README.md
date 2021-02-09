@@ -29,13 +29,12 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 
 5) Importing Assets
 - [x] Use art assets in place of simple "hand-drawn" sprites
-- [ ] Import a background image
 
 6) Timing
 - [x] Adjust game clock to set desired framerate
 
 7) Sound
-- [ ] Import sound assets and tie to specific events
+- [x] Import sound assets and tie to specific events
 
 8) Refactor
 - [ ] Refactor the game to better learn Python and use proper coding practices

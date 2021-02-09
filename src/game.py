@@ -15,6 +15,7 @@
 #------------------------------
 import pygame  # Import the pygame library
 import random  # Random number generation
+import time    # Sleep functions
 
 # Import pygame.locals for easier access to key coordinates
 from pygame.locals import (
@@ -41,37 +42,47 @@ from pygame.locals import (
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
 
-# Test Object Move Step
-OBJ_MOVE_STEP = 10
+# Player Movement Step (pixels)
+PLAYER_MOVE_STEP = 10
 
-# Locations of graphical assets, relative to project top level directory
-PLANE1  = "assets/plane1.png"
-PLANE2  = "assets/plane2.png"
-PLANE3  = "assets/plane3.png"
-PLANE4  = "assets/plane4.png"
-MISSILE = "assets/missile.png"
-CLOUD1  = "assets/cloud1.png"
-CLOUD2  = "assets/cloud2.png"
-CLOUD3  = "assets/cloud3.png"
+# Location of graphical assets, relative to project top level directory
+PLANE1_IMG  = "assets/plane1.png"
+PLANE2_IMG  = "assets/plane2.png"
+PLANE3_IMG  = "assets/plane3.png"
+PLANE4_IMG  = "assets/plane4.png"
+PLANE5_IMG  = "assets/plane5.png"
+MISSILE_IMG = "assets/missile.png"
+CLOUD1_IMG  = "assets/cloud1.png"
+CLOUD2_IMG  = "assets/cloud2.png"
+CLOUD3_IMG  = "assets/cloud3.png"
+
+# Location of audio assets, relative to project top level directory
+MUSIC_SND  = "assets/music.wav"
+PLANE_SND  = "assets/plane.ogg"
+SWOOSH_SND = "assets/swoosh.wav"
+BOOM_SND   = "assets/explosion.mp3"
+GAMOVR_SND = "assets/game_over.ogg"
 
 # Player Class
 class Player(pygame.sprite.Sprite):
    def __init__(self):
       super(Player, self).__init__()
-      self.surf = pygame.image.load(PLANE1).convert()
+      self.surf = pygame.image.load(PLANE5_IMG).convert()
       self.surf.set_colorkey((255, 255, 255), RLEACCEL)
       self.rect = self.surf.get_rect()
 
    # Move the Player based on user input
    def update(self, pressed_keys):
       if pressed_keys[K_UP] | pressed_keys[K_w]:
-         self.rect.move_ip(0, -OBJ_MOVE_STEP)
+         self.rect.move_ip(0, -PLAYER_MOVE_STEP)
+         plane_move_sound.play()
       if pressed_keys[K_DOWN] | pressed_keys[K_s]:
-         self.rect.move_ip(0, OBJ_MOVE_STEP)
+         self.rect.move_ip(0, PLAYER_MOVE_STEP)
+         plane_move_sound.play()
       if pressed_keys[K_LEFT] | pressed_keys[K_a]:
-         self.rect.move_ip(-OBJ_MOVE_STEP, 0)
+         self.rect.move_ip(-PLAYER_MOVE_STEP, 0)
       if pressed_keys[K_RIGHT] | pressed_keys[K_d]:
-         self.rect.move_ip(OBJ_MOVE_STEP, 0)
+         self.rect.move_ip(PLAYER_MOVE_STEP, 0)
 
       # Keep the Player on the screen
       if self.rect.left <= 0:
@@ -87,7 +98,7 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
    def __init__(self):
       super(Enemy, self).__init__()
-      self.surf = pygame.image.load(MISSILE).convert()
+      self.surf = pygame.image.load(MISSILE_IMG).convert()
       self.surf.set_colorkey((255, 255, 255), RLEACCEL)
       self.rect = self.surf.get_rect(
          center = (
@@ -108,7 +119,7 @@ class Enemy(pygame.sprite.Sprite):
 class Cloud(pygame.sprite.Sprite):
    def __init__(self):
       super(Cloud, self).__init__()
-      self.surf = pygame.image.load(CLOUD1).convert()
+      self.surf = pygame.image.load(CLOUD1_IMG).convert()
       self.surf.set_colorkey((255, 255, 255), RLEACCEL)
       # The starting position is randomly generated
       self.rect = self.surf.get_rect(
@@ -128,6 +139,9 @@ class Cloud(pygame.sprite.Sprite):
 #------------------------------
 # Core Logic
 #------------------------------
+
+# Set up mixer for audio
+pygame.mixer.init()
 
 # Initialize pygame
 pygame.init()
@@ -158,6 +172,19 @@ all_sprites = pygame.sprite.Group()
 
 # Add the player to the all_sprites Group
 all_sprites.add(player)
+
+# Load and play background music
+pygame.mixer.music.load(MUSIC_SND)
+pygame.mixer.music.play(loops=-1)
+
+# Load and play plane flying sound
+plane_fly_sound = pygame.mixer.Sound(PLANE_SND)
+plane_fly_sound.play(loops=-1)
+
+# Load all other sound files
+plane_move_sound = pygame.mixer.Sound(SWOOSH_SND)
+boom_sound = pygame.mixer.Sound(BOOM_SND)
+gamover_sound = pygame.mixer.Sound(GAMOVR_SND)
 
 # Variable to keep the main loop running
 running = True
@@ -211,13 +238,30 @@ while running:
    if pygame.sprite.spritecollideany(player, enemies):
       # If so, remove the player and stop the game loop
       player.kill()
+
+      # Stop any moving sounds and play the collision sound
+      plane_move_sound.stop()
+      plane_fly_sound.stop()
+      boom_sound.play()
+
+      # Stop the game loop
       running = False
 
    # Flip (redraw) the display
    pygame.display.flip()
 
+   # Pause before closing
+   if running == False:
+      time.sleep(2)
+      gamover_sound.play()
+      time.sleep(3)
+
    # Ensure game maintains framerate of 30 fps
    clock.tick(30)
+
+# Stop and quit the sound mixer
+pygame.mixer.music.stop()
+pygame.mixer.quit()
 
 # Done! Time to quit
 pygame.quit()
