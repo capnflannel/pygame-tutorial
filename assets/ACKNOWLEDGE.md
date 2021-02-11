@@ -13,3 +13,4 @@ All assets were obtained from https://opengameart.org/
    - Swoosh: https://opengameart.org/content/3-melee-sounds
    - Explosion: https://opengameart.org/content/chunky-explosion
    - Game Over: https://opengameart.org/content/game-over-soundold-school
+   - Ding: https://opengameart.org/content/completion-sound
