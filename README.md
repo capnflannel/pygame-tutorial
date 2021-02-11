@@ -41,12 +41,14 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 
 9) Customize
 - [x] Add score keeping
-- [ ] Fix collision hitboxes
+- [x] Fix collision hitboxes
 - [ ] Add restart after death
 - [ ] Add start menu
 - [ ] Add selectable difficulty
 - [ ] Add non-linear pathing of projectiles
 - [ ] Add shooting mechanism
+- [ ] Add player health
+- [ ] Add power-ups
 
 # Postmortem
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

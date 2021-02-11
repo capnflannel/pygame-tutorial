@@ -78,6 +78,7 @@ class Player(pygame.sprite.Sprite):
       self.surf = pygame.image.load(PLANE_IMG).convert()
       self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect()
+      self.mask = pygame.mask.from_surface(self.surf)
 
    # Move the Player based on user input
    def update(self, pressed_keys):
@@ -114,6 +115,7 @@ class Enemy(pygame.sprite.Sprite):
             random.randint(0, SCREEN_HEIGHT)
          )
       )
+      self.mask = pygame.mask.from_surface(self.surf)
       self.speed = random.randint(5, 20)
 
    # Move the sprite based on speed
@@ -280,17 +282,20 @@ while running:
    score.blit(screen)
 
    # Check for a collision between the Player and all enemies
-   if pygame.sprite.spritecollideany(player, enemies):
-      # If so, remove the player and stop the game loop
-      player.kill()
+   enemy = pygame.sprite.spritecollideany(player, enemies)
+   if enemy != None:
+      # Check the collision mask for pixel-perfect collision
+      if pygame.sprite.spritecollide(player, enemies, True, pygame.sprite.collide_mask):
+         # If so, remove the player and stop the game loop
+         player.kill()
 
-      # Stop any moving sounds and play the collision sound
-      plane_move_sound.stop()
-      plane_fly_sound.stop()
-      boom_sound.play()
+         # Stop any moving sounds and play the collision sound
+         plane_move_sound.stop()
+         plane_fly_sound.stop()
+         boom_sound.play()
 
-      # Stop the game loop
-      running = False
+         # Stop the game loop
+         running = False
 
    # Flip (redraw) the display
    pygame.display.flip()
