@@ -40,7 +40,13 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [ ] Refactor the game to better learn Python and use proper coding practices
 
 9) Customize
-- [ ] Add a custom feature to the game!
+- [x] Add score keeping
+- [ ] Fix collision hitboxes
+- [ ] Add restart after death
+- [ ] Add start menu
+- [ ] Add selectable difficulty
+- [ ] Add non-linear pathing of projectiles
+- [ ] Add shooting mechanism
 
 # Postmortem
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

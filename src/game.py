@@ -45,16 +45,23 @@ SCREEN_HEIGHT = 768
 # Player Movement Step (pixels)
 PLAYER_MOVE_STEP = 10
 
+# Color definitions
+COLOR_BLACK = (0, 0, 0)
+COLOR_WHITE = (255, 255, 255)
+COLOR_RED   = (255, 0, 0)
+COLOR_GREEN = (0, 255, 0)
+COLOR_BLUE  = (0, 0, 255)
+COLOR_SKY   = (135, 206, 250)
+
 # Location of graphical assets, relative to project top level directory
-PLANE1_IMG  = "assets/plane1.png"
-PLANE2_IMG  = "assets/plane2.png"
-PLANE3_IMG  = "assets/plane3.png"
-PLANE4_IMG  = "assets/plane4.png"
-PLANE5_IMG  = "assets/plane5.png"
+PLANE_IMG   = "assets/plane5.png"
 MISSILE_IMG = "assets/missile.png"
 CLOUD1_IMG  = "assets/cloud1.png"
 CLOUD2_IMG  = "assets/cloud2.png"
 CLOUD3_IMG  = "assets/cloud3.png"
+
+# Array of cloud images
+cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
 
 # Location of audio assets, relative to project top level directory
 MUSIC_SND  = "assets/music.wav"
@@ -62,13 +69,14 @@ PLANE_SND  = "assets/plane.ogg"
 SWOOSH_SND = "assets/swoosh.wav"
 BOOM_SND   = "assets/explosion.mp3"
 GAMOVR_SND = "assets/game_over.ogg"
+DING_SND   = "assets/ding.mp3"
 
 # Player Class
 class Player(pygame.sprite.Sprite):
    def __init__(self):
       super(Player, self).__init__()
-      self.surf = pygame.image.load(PLANE5_IMG).convert()
-      self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+      self.surf = pygame.image.load(PLANE_IMG).convert()
+      self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect()
 
    # Move the Player based on user input
@@ -99,7 +107,7 @@ class Enemy(pygame.sprite.Sprite):
    def __init__(self):
       super(Enemy, self).__init__()
       self.surf = pygame.image.load(MISSILE_IMG).convert()
-      self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+      self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect(
          center = (
             random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
@@ -119,8 +127,8 @@ class Enemy(pygame.sprite.Sprite):
 class Cloud(pygame.sprite.Sprite):
    def __init__(self):
       super(Cloud, self).__init__()
-      self.surf = pygame.image.load(CLOUD1_IMG).convert()
-      self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+      self.surf = pygame.image.load(cloud_imgs[random.randint(0, len(cloud_imgs) - 1)]).convert()
+      self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       # The starting position is randomly generated
       self.rect = self.surf.get_rect(
          center = (
@@ -135,6 +143,25 @@ class Cloud(pygame.sprite.Sprite):
       self.rect.move_ip(-5, 0)
       if self.rect.right < 0:
          self.kill()
+
+# Score Object
+class Score(object):
+   def __init__(self):
+      self.font = pygame.font.SysFont("Arial", 25)
+      self.total = 0
+      self.color = COLOR_BLACK
+      self.text = None
+
+   def update(self):
+      self.text = self.font.render("Score: {0}".format(self.total), 1, self.color)
+
+   def add(self, amount):
+      self.total += amount
+      if amount > 0:
+         ding_sound.play()
+
+   def blit(self, surf):
+      surf.blit(self.text, ((SCREEN_WIDTH / 2) - (self.text.get_width() / 2), self.text.get_height()))
 
 #------------------------------
 # Core Logic
@@ -163,10 +190,14 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 # Instantiate the player object
 player = Player()
 
+# Instantiate the score object
+score = Score()
+
 # Create Groups to hold enemy sprites and all sprited
 # - enemies is used for collision detection and postition updates
 # - all_sprites is used for rendering
 enemies = pygame.sprite.Group()
+enemy_cnt = len(enemies)
 clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
@@ -184,6 +215,7 @@ plane_fly_sound.play(loops=-1)
 # Load all other sound files
 plane_move_sound = pygame.mixer.Sound(SWOOSH_SND)
 boom_sound = pygame.mixer.Sound(BOOM_SND)
+ding_sound = pygame.mixer.Sound(DING_SND)
 gamover_sound = pygame.mixer.Sound(GAMOVR_SND)
 
 # Variable to keep the main loop running
@@ -207,6 +239,7 @@ while running:
          # Create the new enemy and add it to the sprite groups
          new_enemy = Enemy()
          enemies.add(new_enemy)
+         enemy_cnt += 1
          all_sprites.add(new_enemy)
       # Add a new cloud?
       elif event.type == ADDCLOUD:
@@ -221,18 +254,30 @@ while running:
    # Update the player sprite based on user input
    player.update(pressed_keys)
 
-   # Update enemy positions
+   # save off the enemy count
+   enemy_cnt_tmp = enemy_cnt
+   # Update enemy positions and count how many are remaining
    enemies.update()
+   enemy_cnt = len(enemies)
+
+   # Update the score
+   score.add(enemy_cnt_tmp - enemy_cnt)
 
    # Update cloud positions
    clouds.update()
 
-   # Fill the background
-   screen.fill((135, 206, 250))
+   # Update the score text
+   score.update()
+
+   # Fill the background (sky blue)
+   screen.fill(COLOR_SKY)
 
    # Draw all sprites to the screen
    for entity in all_sprites:
       screen.blit(entity.surf, entity.rect)
+
+   # Draw the score to the screen
+   score.blit(screen)
 
    # Check for a collision between the Player and all enemies
    if pygame.sprite.spritecollideany(player, enemies):
