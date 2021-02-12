@@ -47,8 +47,8 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [ ] Add selectable difficulty
 - [ ] Add non-linear pathing of projectiles
 - [ ] Add shooting mechanism
-- [ ] Add player health
-- [ ] Add power-ups
+- [x] Add player health
+- [x] Add power-ups
 
 # Postmortem
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

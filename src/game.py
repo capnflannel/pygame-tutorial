@@ -46,30 +46,47 @@ SCREEN_HEIGHT = 768
 PLAYER_MOVE_STEP = 10
 
 # Color definitions
-COLOR_BLACK = (0, 0, 0)
-COLOR_WHITE = (255, 255, 255)
-COLOR_RED   = (255, 0, 0)
-COLOR_GREEN = (0, 255, 0)
-COLOR_BLUE  = (0, 0, 255)
-COLOR_SKY   = (135, 206, 250)
+COLOR_BLACK  = (0, 0, 0)
+COLOR_WHITE  = (255, 255, 255)
+COLOR_RED    = (255, 0, 0)
+COLOR_GREEN  = (0, 255, 0)
+COLOR_BLUE   = (0, 0, 255)
+COLOR_SKY    = (135, 206, 250)
+COLOR_GRAY   = (128, 128, 128)
+COLOR_YELLOW = (255, 255, 0)
+COLOR_ORANGE = (255, 128, 0)
 
 # Location of graphical assets, relative to project top level directory
-PLANE_IMG   = "assets/plane5.png"
-MISSILE_IMG = "assets/missile.png"
-CLOUD1_IMG  = "assets/cloud1.png"
-CLOUD2_IMG  = "assets/cloud2.png"
-CLOUD3_IMG  = "assets/cloud3.png"
+PLANE_IMG      = "assets/plane5.png"
+MISSILE_IMG    = "assets/missile.png"
+CLOUD1_IMG     = "assets/cloud1.png"
+CLOUD2_IMG     = "assets/cloud2.png"
+CLOUD3_IMG     = "assets/cloud3.png"
+ORB_RED_IMG    = "assets/red_orb.png"
+ORB_BLUE_IMG   = "assets/blue_orb.png"
+ORB_GREEN_IMG  = "assets/green_orb.png"
+ORB_YELLOW_IMG = "assets/yellow_orb.png"
 
 # Array of cloud images
 cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
 
+# Array of orb images
+orb_imgs = [ORB_RED_IMG, ORB_YELLOW_IMG, ORB_BLUE_IMG, ORB_GREEN_IMG]
+# Array of orb health bonus effects
+orb_health_bonus = [1, 5, 10, 50]
+orb_score_bonus = [5, 10, 50, 100]
+
 # Location of audio assets, relative to project top level directory
-MUSIC_SND  = "assets/music.wav"
-PLANE_SND  = "assets/plane.ogg"
-SWOOSH_SND = "assets/swoosh.wav"
-BOOM_SND   = "assets/explosion.mp3"
-GAMOVR_SND = "assets/game_over.ogg"
-DING_SND   = "assets/ding.mp3"
+MUSIC_SND   = "assets/music.wav"
+PLANE_SND   = "assets/plane.ogg"
+BOOM_SND    = "assets/explosion.mp3"
+GAMOVR_SND  = "assets/game_over.ogg"
+DING_SND    = "assets/ding.mp3"
+POWERUP_SND = "assets/powerup.wav"
+
+# Player health bounds
+PLAYER_HEALTH_MAX = 100
+PLAYER_HEALTH_MIN = 0
 
 # Player Class
 class Player(pygame.sprite.Sprite):
@@ -79,15 +96,15 @@ class Player(pygame.sprite.Sprite):
       self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect()
       self.mask = pygame.mask.from_surface(self.surf)
+      self.health = PLAYER_HEALTH_MAX
+      self.health_bar = None
 
    # Move the Player based on user input
    def update(self, pressed_keys):
       if pressed_keys[K_UP] | pressed_keys[K_w]:
          self.rect.move_ip(0, -PLAYER_MOVE_STEP)
-         plane_move_sound.play()
       if pressed_keys[K_DOWN] | pressed_keys[K_s]:
          self.rect.move_ip(0, PLAYER_MOVE_STEP)
-         plane_move_sound.play()
       if pressed_keys[K_LEFT] | pressed_keys[K_a]:
          self.rect.move_ip(-PLAYER_MOVE_STEP, 0)
       if pressed_keys[K_RIGHT] | pressed_keys[K_d]:
@@ -103,6 +120,47 @@ class Player(pygame.sprite.Sprite):
       if self.rect.bottom >= SCREEN_HEIGHT:
          self.rect.bottom = SCREEN_HEIGHT
 
+   # Adjust the player's health
+   def inc_health(self, amount):
+      self.health += amount
+      if self.health >= PLAYER_HEALTH_MAX:
+         self.health = PLAYER_HEALTH_MAX
+
+   # Adjust the player's health
+   def dec_health(self, amount):
+      self.health -= amount
+      if self.health <= PLAYER_HEALTH_MIN:
+         self.health = PLAYER_HEALTH_MIN
+
+   # Get the player's current health
+   def get_health(self):
+      return self.health
+
+   # Draw the player's health bar
+   def draw_health_bar(self, surf):
+      # Set up bar size parameters
+      width = PLAYER_HEALTH_MAX
+      height = 20
+      bar_fill = (self.health / PLAYER_HEALTH_MAX) * width
+
+      # Create the rectangles
+      bar_rect = pygame.Rect(5, 5, width, height)
+      fill_rect = pygame.Rect(5, 5, bar_fill, height)
+      
+      # Get the health bar color
+      if self.health >= 75:
+         bar_color = COLOR_GREEN
+      elif self.health >= 50:
+         bar_color = COLOR_YELLOW
+      elif self.health >= 25:
+         bar_color = COLOR_ORANGE
+      else:
+         bar_color = COLOR_RED
+
+      # Draw the rectangles
+      pygame.draw.rect(surf, bar_color, fill_rect)
+      pygame.draw.rect(surf, COLOR_GRAY, bar_rect, 1)
+
 # Enemy Class
 class Enemy(pygame.sprite.Sprite):
    def __init__(self):
@@ -117,19 +175,55 @@ class Enemy(pygame.sprite.Sprite):
       )
       self.mask = pygame.mask.from_surface(self.surf)
       self.speed = random.randint(5, 20)
+      self.health = 1
+      self.dmg = 10
 
    # Move the sprite based on speed
-   # Remove the sprite when it passed the left edge of the screen
+   # Remove the sprite when it passes the left edge of the screen
    def update(self):
       self.rect.move_ip(-self.speed, 0)
       if self.rect.right < 0:
          self.kill()
 
+   # Get amount of damage the enemy does
+   def get_dmg(self):
+      return self.dmg
+
+# Orb Class
+class Orb(pygame.sprite.Sprite):
+   def __init__(self):
+      super(Orb, self).__init__()
+      self.type = random.randint(0, len(orb_imgs) - 1)
+      self.surf = pygame.image.load(orb_imgs[self.type]).convert()
+      self.surf.set_colorkey(COLOR_BLACK, RLEACCEL)
+      self.rect = self.surf.get_rect(
+         center = (
+            random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+            random.randint(0, SCREEN_HEIGHT)
+         )
+      )
+      self.mask = pygame.mask.from_surface(self.surf)
+      self.speed = random.randint(5, 15)
+
+   # Move the sprite based on speed
+   # Remove the sprite when it passes the left edge of the screen
+   def update(self):
+      self.rect.move_ip(-self.speed, 0)
+      if self.rect.right < 0:
+         self.kill()
+
+   def get_health_bonus(self):
+      return orb_health_bonus[self.type]
+
+   def get_score_bonus(self):
+      return orb_score_bonus[self.type]
+
 # Cloud Class
 class Cloud(pygame.sprite.Sprite):
    def __init__(self):
       super(Cloud, self).__init__()
-      self.surf = pygame.image.load(cloud_imgs[random.randint(0, len(cloud_imgs) - 1)]).convert()
+      self.type = random.randint(0, len(cloud_imgs) - 1)
+      self.surf = pygame.image.load(cloud_imgs[self.type]).convert()
       self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       # The starting position is randomly generated
       self.rect = self.surf.get_rect(
@@ -138,11 +232,12 @@ class Cloud(pygame.sprite.Sprite):
             random.randint(0, SCREEN_HEIGHT)
          )
       )
+      self.speed = random.randint(2, 7)
 
    # Move the cloud based on constant speed
    # Remove the cloud when it passes the left edge of the screen
    def update(self):
-      self.rect.move_ip(-5, 0)
+      self.rect.move_ip(-self.speed, 0)
       if self.rect.right < 0:
          self.kill()
 
@@ -187,7 +282,11 @@ pygame.time.set_timer(ADDENEMY, 250)
 
 # Create a custom event for adding a new cloud
 ADDCLOUD = pygame.USEREVENT + 2
-pygame.time.set_timer(ADDCLOUD, 1000)
+pygame.time.set_timer(ADDCLOUD, 2000)
+
+# Create a custom event for adding orbs
+ADDORB = pygame.USEREVENT + 3
+pygame.time.set_timer(ADDORB, 10000)
 
 # Instantiate the player object
 player = Player()
@@ -197,9 +296,11 @@ score = Score()
 
 # Create Groups to hold enemy sprites and all sprited
 # - enemies is used for collision detection and postition updates
+# - orbs is used for collision detection and position updates
+# - clouds is used for position updates
 # - all_sprites is used for rendering
 enemies = pygame.sprite.Group()
-enemy_cnt = len(enemies)
+orbs = pygame.sprite.Group()
 clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
@@ -215,9 +316,9 @@ plane_fly_sound = pygame.mixer.Sound(PLANE_SND)
 plane_fly_sound.play(loops=-1)
 
 # Load all other sound files
-plane_move_sound = pygame.mixer.Sound(SWOOSH_SND)
 boom_sound = pygame.mixer.Sound(BOOM_SND)
 ding_sound = pygame.mixer.Sound(DING_SND)
+powerup_sound = pygame.mixer.Sound(POWERUP_SND)
 gamover_sound = pygame.mixer.Sound(GAMOVR_SND)
 
 # Variable to keep the main loop running
@@ -241,7 +342,7 @@ while running:
          # Create the new enemy and add it to the sprite groups
          new_enemy = Enemy()
          enemies.add(new_enemy)
-         enemy_cnt += 1
+         #enemy_cnt += 1
          all_sprites.add(new_enemy)
       # Add a new cloud?
       elif event.type == ADDCLOUD:
@@ -249,6 +350,12 @@ while running:
          new_cloud = Cloud()
          clouds.add(new_cloud)
          all_sprites.add(new_cloud)
+      # Add a new orb?
+      elif event.type == ADDORB:
+         # Create the new orb and add it to the sprite groups
+         new_orb = Orb()
+         orbs.add(new_orb)
+         all_sprites.add(new_orb)
 
    # Get all the keys currently pressed
    pressed_keys = pygame.key.get_pressed()
@@ -257,19 +364,18 @@ while running:
    player.update(pressed_keys)
 
    # save off the enemy count
-   enemy_cnt_tmp = enemy_cnt
+   enemy_cnt_tmp = len(enemies)
    # Update enemy positions and count how many are remaining
    enemies.update()
-   enemy_cnt = len(enemies)
 
    # Update the score
-   score.add(enemy_cnt_tmp - enemy_cnt)
+   score.add(enemy_cnt_tmp - len(enemies))
 
    # Update cloud positions
    clouds.update()
 
-   # Update the score text
-   score.update()
+   # Update orb positions
+   orbs.update()
 
    # Fill the background (sky blue)
    screen.fill(COLOR_SKY)
@@ -278,24 +384,44 @@ while running:
    for entity in all_sprites:
       screen.blit(entity.surf, entity.rect)
 
-   # Draw the score to the screen
-   score.blit(screen)
-
    # Check for a collision between the Player and all enemies
    enemy = pygame.sprite.spritecollideany(player, enemies)
    if enemy != None:
       # Check the collision mask for pixel-perfect collision
       if pygame.sprite.spritecollide(player, enemies, True, pygame.sprite.collide_mask):
-         # If so, remove the player and stop the game loop
-         player.kill()
-
-         # Stop any moving sounds and play the collision sound
-         plane_move_sound.stop()
-         plane_fly_sound.stop()
+         # Apply damage
+         player.dec_health(enemy.get_dmg())
          boom_sound.play()
 
-         # Stop the game loop
-         running = False
+   # Check for a collision between the Player and all orbs
+   orb = pygame.sprite.spritecollideany(player, orbs)
+   if orb != None:
+      # Check the collision mask for pixel-perfect collision
+      if pygame.sprite.spritecollide(player, orbs, True, pygame.sprite.collide_mask):
+         # If so, apply the power-up and play a sound
+         player.inc_health(orb.get_health_bonus())
+         powerup_sound.play()
+         score.add(orb.get_score_bonus())
+
+   # Update the score text
+   score.update()
+
+   # Draw the score to the screen
+   score.blit(screen)
+
+   # Draw the player's health bar
+   player.draw_health_bar(screen)
+
+   # Check for player death
+   if player.get_health() == PLAYER_HEALTH_MIN:
+      # Remove the player
+      player.kill()
+
+      # Stop any moving sounds and play the collision sound
+      plane_fly_sound.stop()
+
+      # Stop the game loop
+      running = False
 
    # Flip (redraw) the display
    pygame.display.flip()
