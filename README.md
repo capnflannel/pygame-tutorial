@@ -46,9 +46,10 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [ ] Add start menu
 - [ ] Add selectable difficulty
 - [ ] Add non-linear pathing of projectiles
-- [ ] Add shooting mechanism
+- [x] Add shooting mechanism
 - [x] Add player health
 - [x] Add power-ups
+- [ ] Add animations (e.g. explosions)
 
 # Postmortem
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

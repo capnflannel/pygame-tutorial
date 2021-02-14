@@ -66,6 +66,7 @@ ORB_RED_IMG    = "assets/red_orb.png"
 ORB_BLUE_IMG   = "assets/blue_orb.png"
 ORB_GREEN_IMG  = "assets/green_orb.png"
 ORB_YELLOW_IMG = "assets/yellow_orb.png"
+BULLET_IMG     = "assets/bullet.png"
 
 # Array of cloud images
 cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
@@ -74,7 +75,7 @@ cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
 orb_imgs = [ORB_RED_IMG, ORB_YELLOW_IMG, ORB_BLUE_IMG, ORB_GREEN_IMG]
 # Array of orb health bonus effects
 orb_health_bonus = [1, 5, 10, 50]
-orb_score_bonus = [5, 10, 50, 100]
+orb_score = [5, 10, 50, 100]
 
 # Location of audio assets, relative to project top level directory
 MUSIC_SND   = "assets/music.wav"
@@ -83,6 +84,8 @@ BOOM_SND    = "assets/explosion.mp3"
 GAMOVR_SND  = "assets/game_over.ogg"
 DING_SND    = "assets/ding.mp3"
 POWERUP_SND = "assets/powerup.wav"
+BAD_SND     = "assets/bad.wav"
+PEW_SND     = "assets/pew.wav"
 
 # Player health bounds
 PLAYER_HEALTH_MAX = 100
@@ -109,6 +112,8 @@ class Player(pygame.sprite.Sprite):
          self.rect.move_ip(-PLAYER_MOVE_STEP, 0)
       if pressed_keys[K_RIGHT] | pressed_keys[K_d]:
          self.rect.move_ip(PLAYER_MOVE_STEP, 0)
+      if pressed_keys[K_SPACE]:
+         self.shoot()
 
       # Keep the Player on the screen
       if self.rect.left <= 0:
@@ -161,6 +166,38 @@ class Player(pygame.sprite.Sprite):
       pygame.draw.rect(surf, bar_color, fill_rect)
       pygame.draw.rect(surf, COLOR_GRAY, bar_rect, 1)
 
+   def shoot(self):
+      # Spawn bullets from the front rightof the plane
+      new_bullet = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6))
+      bullets.add(new_bullet)
+      all_sprites.add(new_bullet)
+      pew_sound.play()
+
+# Bullet Class
+class Bullet(pygame.sprite.Sprite):
+   def __init__(self, x, y):
+      super(Bullet, self).__init__()
+      self.surf = pygame.image.load(BULLET_IMG).convert()
+      self.surf.set_colorkey(COLOR_BLACK, RLEACCEL)
+      self.rect = self.surf.get_rect(
+         center = (
+            # Spawn based on location of player
+            x, y
+         )
+      )
+      self.mask = pygame.mask.from_surface(self.surf)
+      self.speed = 20
+      self.dmg = 10
+      self.score = 0
+
+   def update(self):
+      self.rect.move_ip(self.speed, 0)
+      if self.rect.left > SCREEN_WIDTH:
+         self.kill()
+
+   def get_score(self):
+      return self.score
+
 # Enemy Class
 class Enemy(pygame.sprite.Sprite):
    def __init__(self):
@@ -175,8 +212,10 @@ class Enemy(pygame.sprite.Sprite):
       )
       self.mask = pygame.mask.from_surface(self.surf)
       self.speed = random.randint(5, 20)
+      #self.path = 0 # TODO: ENUM describing path (LINEAR, SINUSOID, DIAG, RISE, FALL)
       self.health = 1
       self.dmg = 10
+      self.score = 10
 
    # Move the sprite based on speed
    # Remove the sprite when it passes the left edge of the screen
@@ -188,6 +227,9 @@ class Enemy(pygame.sprite.Sprite):
    # Get amount of damage the enemy does
    def get_dmg(self):
       return self.dmg
+
+   def get_score(self):
+      return self.score
 
 # Orb Class
 class Orb(pygame.sprite.Sprite):
@@ -215,8 +257,8 @@ class Orb(pygame.sprite.Sprite):
    def get_health_bonus(self):
       return orb_health_bonus[self.type]
 
-   def get_score_bonus(self):
-      return orb_score_bonus[self.type]
+   def get_score(self):
+      return orb_score[self.type]
 
 # Cloud Class
 class Cloud(pygame.sprite.Sprite):
@@ -241,7 +283,7 @@ class Cloud(pygame.sprite.Sprite):
       if self.rect.right < 0:
          self.kill()
 
-# Score Object
+# Score Class
 class Score(object):
    def __init__(self):
       self.font = pygame.font.SysFont("Arial", 25)
@@ -256,6 +298,10 @@ class Score(object):
       self.total += amount
       if amount > 0:
          ding_sound.play()
+      else:
+         bad_sound.play()
+         if self.total < 0:
+            self.total = 0
 
    def blit(self, surf):
       surf.blit(self.text, ((SCREEN_WIDTH / 2) - (self.text.get_width() / 2), self.text.get_height()))
@@ -302,6 +348,7 @@ score = Score()
 enemies = pygame.sprite.Group()
 orbs = pygame.sprite.Group()
 clouds = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 # Add the player to the all_sprites Group
@@ -320,6 +367,8 @@ boom_sound = pygame.mixer.Sound(BOOM_SND)
 ding_sound = pygame.mixer.Sound(DING_SND)
 powerup_sound = pygame.mixer.Sound(POWERUP_SND)
 gamover_sound = pygame.mixer.Sound(GAMOVR_SND)
+bad_sound = pygame.mixer.Sound(BAD_SND)
+pew_sound = pygame.mixer.Sound(PEW_SND)
 
 # Variable to keep the main loop running
 running = True
@@ -342,7 +391,6 @@ while running:
          # Create the new enemy and add it to the sprite groups
          new_enemy = Enemy()
          enemies.add(new_enemy)
-         #enemy_cnt += 1
          all_sprites.add(new_enemy)
       # Add a new cloud?
       elif event.type == ADDCLOUD:
@@ -363,13 +411,11 @@ while running:
    # Update the player sprite based on user input
    player.update(pressed_keys)
 
-   # save off the enemy count
-   enemy_cnt_tmp = len(enemies)
+   # Update the bullets
+   bullets.update()
+
    # Update enemy positions and count how many are remaining
    enemies.update()
-
-   # Update the score
-   score.add(enemy_cnt_tmp - len(enemies))
 
    # Update cloud positions
    clouds.update()
@@ -393,6 +439,18 @@ while running:
          player.dec_health(enemy.get_dmg())
          boom_sound.play()
 
+    # Check for a collision between all bullets and enemies
+   for bullet in bullets:
+      enemy = pygame.sprite.spritecollideany(bullet, enemies)
+      if enemy != None:
+         # Check the collision mask for pixel-perfect collision
+         hits = pygame.sprite.spritecollide(bullet, enemies, True, pygame.sprite.collide_mask)
+         if hits != None:
+            for i in hits:
+               hit = hits.pop()
+               score.add(hit.get_score())
+               hit.kill()
+
    # Check for a collision between the Player and all orbs
    orb = pygame.sprite.spritecollideany(player, orbs)
    if orb != None:
@@ -401,7 +459,7 @@ while running:
          # If so, apply the power-up and play a sound
          player.inc_health(orb.get_health_bonus())
          powerup_sound.play()
-         score.add(orb.get_score_bonus())
+         score.add(orb.get_score())
 
    # Update the score text
    score.update()
