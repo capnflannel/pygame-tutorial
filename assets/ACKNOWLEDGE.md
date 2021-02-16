@@ -19,3 +19,4 @@ All assets were obtained from https://opengameart.org/
    - Power-Ups: https://opengameart.org/content/8-bit-powerup-1
    - Bad: https://opengameart.org/content/bad-sound-1
    - Pew: https://opengameart.org/content/gunloop-8bit
+   - Menu Music: https://opengameart.org/content/chiptune-interlude-pack
