@@ -43,13 +43,18 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Add score keeping
 - [x] Fix collision hitboxes
 - [ ] Add restart after death
+- [ ] Add intro
 - [ ] Add start menu
+- [x] Add pause menu
+- [ ] Add options menu
 - [ ] Add selectable difficulty
 - [ ] Add non-linear pathing of projectiles
 - [x] Add shooting mechanism
 - [x] Add player health
 - [x] Add power-ups
 - [ ] Add animations (e.g. explosions)
+- [ ] Add experience (leveling)
+- [ ] Add shields
 
-# Postmortem
+# Retrospective
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

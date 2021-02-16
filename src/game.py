@@ -26,10 +26,13 @@ from pygame.locals import (
    K_RIGHT,    # RIGHT Key
    K_ESCAPE,   # ESC Key
    K_SPACE,    # Space Key
+   K_RETURN,   # RETURN Key
+   K_KP_ENTER, # ENTER Key
    K_w,        # W Key
    K_s,        # S Key
    K_a,        # A Key
    K_d,        # D Key
+   K_q,        # Q Key
    KEYDOWN,    # Keypress Event
    QUIT        # Quit Event
 )
@@ -41,6 +44,10 @@ from pygame.locals import (
 # Define constants for the screen width and height
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
+
+# Frames Per Second
+GAME_FPS_30 = 30
+GAME_FPS_60 = 60
 
 # Player Movement Step (pixels)
 PLAYER_MOVE_STEP = 10
@@ -86,10 +93,15 @@ DING_SND    = "assets/ding.mp3"
 POWERUP_SND = "assets/powerup.wav"
 BAD_SND     = "assets/bad.wav"
 PEW_SND     = "assets/pew.wav"
+MENU_SND    = "assets/menu_music.ogg"
 
 # Player health bounds
 PLAYER_HEALTH_MAX = 100
 PLAYER_HEALTH_MIN = 0
+
+#------------------------------
+# Classes
+#------------------------------
 
 # Player Class
 class Player(pygame.sprite.Sprite):
@@ -100,6 +112,8 @@ class Player(pygame.sprite.Sprite):
       self.rect = self.surf.get_rect()
       self.mask = pygame.mask.from_surface(self.surf)
       self.health = PLAYER_HEALTH_MAX
+      self.exp = 0
+      self.level = 1
       self.health_bar = None
 
    # Move the Player based on user input
@@ -307,6 +321,285 @@ class Score(object):
       surf.blit(self.text, ((SCREEN_WIDTH / 2) - (self.text.get_width() / 2), self.text.get_height()))
 
 #------------------------------
+# Functions
+#------------------------------
+
+# Plays the intro sequence
+#def intro():
+   # TODO play intro sequence
+
+# The start menu loop
+#def start_menu():
+   # TODO Draw game start menu
+
+# The pause menu loop
+def pause_menu():
+   # Game is paused
+   paused = True
+
+   # Return value to tell the game whether it should continue running
+   running = True
+
+   # Play the menu music
+   menu_music.play(loops=-1)
+
+   # Set up the menu font
+   menu_font = pygame.font.SysFont('Arial', 25)
+
+   # Draw the menu
+   border_width = SCREEN_WIDTH / 4
+   border_height = SCREEN_HEIGHT / 3
+   window_width = border_width - 4
+   window_height = border_height - 4
+   # Draw the window border
+   border = pygame.draw.rect(screen, COLOR_BLACK, pygame.Rect((((SCREEN_WIDTH / 2) - (border_width / 2)), ((SCREEN_HEIGHT / 2) - (border_height / 2))), (border_width, border_height)), border_radius=8)
+   # Draw the window
+   window = pygame.draw.rect(screen, COLOR_GRAY, pygame.Rect((((SCREEN_WIDTH / 2) - (window_width / 2)), ((SCREEN_HEIGHT / 2) - (window_height / 2))), (window_width, window_height)), border_radius=8)
+
+   # Draw the menu text
+   paused_text = menu_font.render('PAUSED', True, COLOR_BLACK)
+   text_height = paused_text.get_height()
+   screen.blit(paused_text, (window.left + ((window.width - paused_text.get_width()) / 2), window.top + (text_height / 2)))
+
+   # Initialize the menu text
+   resume_text = menu_font.render('RESUME', True, COLOR_WHITE)
+   resume_text_hl = menu_font.render('RESUME', True, COLOR_YELLOW)
+   restart_text = menu_font.render('RESTART', True, COLOR_WHITE)
+   restart_text_hl = menu_font.render('RESTART', True, COLOR_YELLOW)
+   options_text = menu_font.render('OPTIONS', True, COLOR_WHITE)
+   options_text_hl = menu_font.render('OPTIONS', True, COLOR_YELLOW)
+   quit_text = menu_font.render('QUIT', True, COLOR_WHITE)
+   quit_text_hl = menu_font.render('QUIT', True, COLOR_YELLOW)
+
+   # Array of options
+   menu_options = [quit_text, options_text, restart_text, resume_text]
+   menu_options_hl = [quit_text_hl, options_text_hl, restart_text_hl, resume_text_hl]
+   menu_index = len(menu_options) - 1
+
+   while paused:
+      # Process all events in the event queue
+      for event in pygame.event.get():
+         # Did the user hit a key?
+         if event.type == KEYDOWN:
+            # Handle ESC keypress
+            if event.key == K_ESCAPE:
+               paused = False
+            # Handle UP keypress
+            elif event.key == K_UP:
+               if menu_index < (len(menu_options) - 1):
+                  menu_index += 1
+               else:
+                  menu_index = 0
+               ding_sound.play()
+            # Handle DOWN keypress
+            elif event.key == K_DOWN:
+               if menu_index > 0:
+                  menu_index -= 1
+               else:
+                  menu_index = len(menu_options) - 1
+               ding_sound.play()
+            # Handle ENTER|RETURN keypress
+            elif ((event.key == K_KP_ENTER) or (event.key == K_RETURN)):
+               if menu_index == 0:
+                  # QUIT case
+                  paused = False
+                  running = False
+               elif menu_index == 1:
+                  # TODO: OPTIONS case
+                  paused = False
+               elif menu_index == 2:
+                  # TODO: RESTART case
+                  paused = False
+               elif menu_index == 3:
+                  # RESUME case
+                  paused = False
+               
+               # Pause quick
+               bad_sound.play()
+               time.sleep(0.5)
+         # Did the user close the window?
+         elif event.type == pygame.QUIT:
+            paused = False
+            running = False
+
+      # Update the highlighted text based on menu_index
+      i = 0
+      for opt in menu_options:
+         if i == menu_index:
+            txt = menu_options_hl[i]
+         else:
+            txt = menu_options[i]
+         # Draw the text to the screen
+         screen.blit(txt, (window.left + ((window.width - txt.get_width()) / 2), window.bottom - ((i + 1) * text_height) - ((i + 1) * (text_height / 2))))
+         # Increment the index
+         i += 1
+
+      # Flip (redraw) the display
+      pygame.display.flip()
+
+   # Fade the music out
+   menu_music.fadeout(1)
+
+   # Return whether the game should keep running
+   return running
+
+# The options menu loop
+#def options_menu():
+   # TODO Draw game options menu
+
+# The main game loop
+def game():
+   # Set the game to running
+   running = True
+
+   # Instantiate the player object
+   player = Player()
+
+   # Instantiate the score object
+   score = Score()
+
+   # Add the player to the all_sprites Group
+   all_sprites.add(player)
+
+   # Start the music
+   pygame.mixer.music.play(loops=-1)
+   plane_fly_sound.play(loops=-1)
+
+   while running:
+      # Process all events in the event queue
+      for event in pygame.event.get():
+         # Did the user hit a key?
+         if event.type == KEYDOWN:
+            # Handle ESC keypress
+            if event.key == K_ESCAPE:
+               #playing = False
+               pygame.mixer.music.pause()
+               plane_fly_sound.stop()
+               running = pause_menu()
+               plane_fly_sound.play()
+               pygame.mixer.music.play()
+         # Did the user close the window?
+         elif event.type == pygame.QUIT:
+            running = False
+         # Add a new enemy?
+         elif event.type == ADDENEMY:
+            # Create the new enemy and add it to the sprite groups
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
+         # Add a new cloud?
+         elif event.type == ADDCLOUD:
+            # Create the new cloud and add it to the sprite groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
+         # Add a new orb?
+         elif event.type == ADDORB:
+            # Create the new orb and add it to the sprite groups
+            new_orb = Orb()
+            orbs.add(new_orb)
+            all_sprites.add(new_orb)
+
+      # Check if running again after getting input, in case we need to quit
+      if running == True:
+         # Get all the keys currently pressed
+         pressed_keys = pygame.key.get_pressed()
+
+         # Update the player sprite based on user input
+         player.update(pressed_keys)
+
+         # Update the bullets
+         bullets.update()
+
+         # Update enemy positions and count how many are remaining
+         enemies.update()
+
+         # Update cloud positions
+         clouds.update()
+
+         # Update orb positions
+         orbs.update()
+
+         # Fill the background (sky blue)
+         screen.fill(COLOR_SKY)
+
+         # Draw all sprites to the screen
+         for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+
+         # Check for a collision between the Player and all enemies
+         enemy = pygame.sprite.spritecollideany(player, enemies)
+         if enemy != None:
+            # Check the collision mask for pixel-perfect collision
+            if pygame.sprite.spritecollide(player, enemies, True, pygame.sprite.collide_mask):
+               # Apply damage
+               player.dec_health(enemy.get_dmg())
+               boom_sound.play()
+
+         # Check for a collision between all bullets and enemies
+         for bullet in bullets:
+            enemy = pygame.sprite.spritecollideany(bullet, enemies)
+            if enemy != None:
+               # Check the collision mask for pixel-perfect collision
+               hits = pygame.sprite.spritecollide(bullet, enemies, True, pygame.sprite.collide_mask)
+               if hits != None:
+                  for i in hits:
+                     hit = hits.pop()
+                     score.add(hit.get_score())
+                     hit.kill()
+
+         # Check for a collision between the Player and all orbs
+         orb = pygame.sprite.spritecollideany(player, orbs)
+         if orb != None:
+            # Check the collision mask for pixel-perfect collision
+            if pygame.sprite.spritecollide(player, orbs, True, pygame.sprite.collide_mask):
+               # If so, apply the power-up and play a sound
+               player.inc_health(orb.get_health_bonus())
+               powerup_sound.play()
+               score.add(orb.get_score())
+
+         # Update the score text
+         score.update()
+
+         # Draw the score to the screen
+         score.blit(screen)
+
+         # Draw the player's health bar
+         player.draw_health_bar(screen)
+
+         # Check for player death
+         if player.get_health() == PLAYER_HEALTH_MIN:
+            # Remove the player
+            player.kill()
+
+            # Stop the game loop
+            running = False
+
+         # Flip (redraw) the display
+         pygame.display.flip()
+
+      # Game is no longer running
+      if running == False:
+         # Pause before closing
+         time.sleep(1)
+         gamover_sound.play()
+         time.sleep(3)
+         pygame.mixer.music.stop()
+         plane_fly_sound.stop()
+
+      # Ensure game maintains framerate of 30 fps
+      clock.tick(GAME_FPS_30)
+
+# Clean up pygame resources and quit the game
+def cleanup():
+   # Stop and quit the sound mixer
+   pygame.mixer.music.stop()
+   pygame.mixer.quit()
+
+   # Done! Time to quit
+   pygame.quit()
+
+#------------------------------
 # Core Logic
 #------------------------------
 
@@ -334,12 +627,6 @@ pygame.time.set_timer(ADDCLOUD, 2000)
 ADDORB = pygame.USEREVENT + 3
 pygame.time.set_timer(ADDORB, 10000)
 
-# Instantiate the player object
-player = Player()
-
-# Instantiate the score object
-score = Score()
-
 # Create Groups to hold enemy sprites and all sprited
 # - enemies is used for collision detection and postition updates
 # - orbs is used for collision detection and position updates
@@ -351,16 +638,11 @@ clouds = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
-# Add the player to the all_sprites Group
-all_sprites.add(player)
-
 # Load and play background music
 pygame.mixer.music.load(MUSIC_SND)
-pygame.mixer.music.play(loops=-1)
 
 # Load and play plane flying sound
 plane_fly_sound = pygame.mixer.Sound(PLANE_SND)
-plane_fly_sound.play(loops=-1)
 
 # Load all other sound files
 boom_sound = pygame.mixer.Sound(BOOM_SND)
@@ -369,133 +651,16 @@ powerup_sound = pygame.mixer.Sound(POWERUP_SND)
 gamover_sound = pygame.mixer.Sound(GAMOVR_SND)
 bad_sound = pygame.mixer.Sound(BAD_SND)
 pew_sound = pygame.mixer.Sound(PEW_SND)
+menu_music = pygame.mixer.Sound(MENU_SND)
 
-# Variable to keep the main loop running
-running = True
+# TODO: Load all game sounds
+#init_sounds()
 
-# The main game loop
-while running:
+# Play the Intro
+#intro()
 
-   # Process all events in the event queue
-   for event in pygame.event.get():
-      # Did the user hit a key?
-      if event.type == KEYDOWN:
-         # Handle ESC keypress
-         if event.key == K_ESCAPE:
-            running = False
-      # Did the user close the window?
-      elif event.type == pygame.QUIT:
-         running = False
-      # Add a new enemy?
-      elif event.type == ADDENEMY:
-         # Create the new enemy and add it to the sprite groups
-         new_enemy = Enemy()
-         enemies.add(new_enemy)
-         all_sprites.add(new_enemy)
-      # Add a new cloud?
-      elif event.type == ADDCLOUD:
-         # Create the new cloud and add it to the sprite groups
-         new_cloud = Cloud()
-         clouds.add(new_cloud)
-         all_sprites.add(new_cloud)
-      # Add a new orb?
-      elif event.type == ADDORB:
-         # Create the new orb and add it to the sprite groups
-         new_orb = Orb()
-         orbs.add(new_orb)
-         all_sprites.add(new_orb)
+# Run the Game loop
+game()
 
-   # Get all the keys currently pressed
-   pressed_keys = pygame.key.get_pressed()
-
-   # Update the player sprite based on user input
-   player.update(pressed_keys)
-
-   # Update the bullets
-   bullets.update()
-
-   # Update enemy positions and count how many are remaining
-   enemies.update()
-
-   # Update cloud positions
-   clouds.update()
-
-   # Update orb positions
-   orbs.update()
-
-   # Fill the background (sky blue)
-   screen.fill(COLOR_SKY)
-
-   # Draw all sprites to the screen
-   for entity in all_sprites:
-      screen.blit(entity.surf, entity.rect)
-
-   # Check for a collision between the Player and all enemies
-   enemy = pygame.sprite.spritecollideany(player, enemies)
-   if enemy != None:
-      # Check the collision mask for pixel-perfect collision
-      if pygame.sprite.spritecollide(player, enemies, True, pygame.sprite.collide_mask):
-         # Apply damage
-         player.dec_health(enemy.get_dmg())
-         boom_sound.play()
-
-    # Check for a collision between all bullets and enemies
-   for bullet in bullets:
-      enemy = pygame.sprite.spritecollideany(bullet, enemies)
-      if enemy != None:
-         # Check the collision mask for pixel-perfect collision
-         hits = pygame.sprite.spritecollide(bullet, enemies, True, pygame.sprite.collide_mask)
-         if hits != None:
-            for i in hits:
-               hit = hits.pop()
-               score.add(hit.get_score())
-               hit.kill()
-
-   # Check for a collision between the Player and all orbs
-   orb = pygame.sprite.spritecollideany(player, orbs)
-   if orb != None:
-      # Check the collision mask for pixel-perfect collision
-      if pygame.sprite.spritecollide(player, orbs, True, pygame.sprite.collide_mask):
-         # If so, apply the power-up and play a sound
-         player.inc_health(orb.get_health_bonus())
-         powerup_sound.play()
-         score.add(orb.get_score())
-
-   # Update the score text
-   score.update()
-
-   # Draw the score to the screen
-   score.blit(screen)
-
-   # Draw the player's health bar
-   player.draw_health_bar(screen)
-
-   # Check for player death
-   if player.get_health() == PLAYER_HEALTH_MIN:
-      # Remove the player
-      player.kill()
-
-      # Stop any moving sounds and play the collision sound
-      plane_fly_sound.stop()
-
-      # Stop the game loop
-      running = False
-
-   # Flip (redraw) the display
-   pygame.display.flip()
-
-   # Pause before closing
-   if running == False:
-      time.sleep(2)
-      gamover_sound.play()
-      time.sleep(3)
-
-   # Ensure game maintains framerate of 30 fps
-   clock.tick(30)
-
-# Stop and quit the sound mixer
-pygame.mixer.music.stop()
-pygame.mixer.quit()
-
-# Done! Time to quit
-pygame.quit()
+# Cleanup and exit the game
+cleanup()
