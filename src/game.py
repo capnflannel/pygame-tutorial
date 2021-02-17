@@ -476,8 +476,10 @@ def game():
                pygame.mixer.music.pause()
                plane_fly_sound.stop()
                running = pause_menu()
-               plane_fly_sound.play()
-               pygame.mixer.music.play()
+               # Only restart the music if we're not quitting
+               if running == True:
+                  plane_fly_sound.play(loops=-1 == True)
+                  pygame.mixer.music.play(loops=-1)
          # Did the user close the window?
          elif event.type == pygame.QUIT:
             running = False
