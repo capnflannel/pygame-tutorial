@@ -42,7 +42,7 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 9) Customize
 - [x] Add score keeping
 - [x] Fix collision hitboxes
-- [ ] Add restart after death
+- [ ] Add restart
 - [ ] Add intro
 - [ ] Add start menu
 - [x] Add pause menu

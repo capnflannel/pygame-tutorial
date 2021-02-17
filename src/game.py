@@ -115,6 +115,8 @@ class Player(pygame.sprite.Sprite):
       self.exp = 0
       self.level = 1
       self.health_bar = None
+      self.health_font = pygame.font.SysFont("Arial", 12)
+      self.health_text = None
 
    # Move the Player based on user input
    def update(self, pressed_keys):
@@ -179,6 +181,10 @@ class Player(pygame.sprite.Sprite):
       # Draw the rectangles
       pygame.draw.rect(surf, bar_color, fill_rect)
       pygame.draw.rect(surf, COLOR_GRAY, bar_rect, 1)
+
+      # Draw the text value of the health
+      self.health_text = self.health_font.render("{}/{}".format(self.health, PLAYER_HEALTH_MAX), 1, COLOR_BLACK)
+      surf.blit(self.health_text, ((bar_rect.left + (bar_rect.width / 2) - (self.health_text.get_width() / 2)), (bar_rect.top + (bar_rect.height / 2) - (self.health_text.get_height() / 2))))
 
    def shoot(self):
       # Spawn bullets from the front rightof the plane
@@ -371,7 +377,7 @@ def pause_menu():
    quit_text = menu_font.render('QUIT', True, COLOR_WHITE)
    quit_text_hl = menu_font.render('QUIT', True, COLOR_YELLOW)
 
-   # Array of options
+   # Array of options (drawn from bottom up)
    menu_options = [quit_text, options_text, restart_text, resume_text]
    menu_options_hl = [quit_text_hl, options_text_hl, restart_text_hl, resume_text_hl]
    menu_index = len(menu_options) - 1
@@ -406,7 +412,8 @@ def pause_menu():
                   running = False
                elif menu_index == 1:
                   # TODO: OPTIONS case
-                  paused = False
+                  #options_menu()
+                  paused = False # UNDO
                elif menu_index == 2:
                   # TODO: RESTART case
                   paused = False
