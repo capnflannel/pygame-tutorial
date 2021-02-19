@@ -52,7 +52,7 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Add shooting mechanism
 - [x] Add player health
 - [x] Add power-ups
-- [ ] Add animations (e.g. explosions)
+- [x] Add animations
 - [ ] Add experience (leveling)
 - [ ] Add shields
 

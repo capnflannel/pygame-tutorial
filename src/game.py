@@ -64,16 +64,47 @@ COLOR_YELLOW = (255, 255, 0)
 COLOR_ORANGE = (255, 128, 0)
 
 # Location of graphical assets, relative to project top level directory
-PLANE_IMG      = "assets/plane5.png"
-MISSILE_IMG    = "assets/missile.png"
-CLOUD1_IMG     = "assets/cloud1.png"
-CLOUD2_IMG     = "assets/cloud2.png"
-CLOUD3_IMG     = "assets/cloud3.png"
-ORB_RED_IMG    = "assets/red_orb.png"
-ORB_BLUE_IMG   = "assets/blue_orb.png"
-ORB_GREEN_IMG  = "assets/green_orb.png"
-ORB_YELLOW_IMG = "assets/yellow_orb.png"
-BULLET_IMG     = "assets/bullet.png"
+PLANE_0_2_IMG   = "assets/plane_0_2.png"
+PLANE_1_IMG     = "assets/plane_1.png"
+PLANE_3_IMG     = "assets/plane_3.png"
+MISSILE_IMG     = "assets/missile.png"
+MISSILE_BIG_IMG = "assets/missile_big.png"
+CLOUD1_IMG      = "assets/cloud1.png"
+CLOUD2_IMG      = "assets/cloud2.png"
+CLOUD3_IMG      = "assets/cloud3.png"
+ORB_RED_IMG     = "assets/red_orb.png"
+ORB_BLUE_IMG    = "assets/blue_orb.png"
+ORB_GREEN_IMG   = "assets/green_orb.png"
+ORB_YELLOW_IMG  = "assets/yellow_orb.png"
+BULLET_0_IMG    = "assets/bullet_0.png"
+BULLET_1_IMG    = "assets/bullet_1.png"
+BULLET_2_IMG    = "assets/bullet_2.png"
+BULLET_3_IMG    = "assets/bullet_3.png"
+EXPLOSION_0_IMG = "assets/explosion_0.png"
+EXPLOSION_1_IMG = "assets/explosion_1.png"
+EXPLOSION_2_IMG = "assets/explosion_2.png"
+EXPLOSION_3_IMG = "assets/explosion_3.png"
+EXPLOSION_4_IMG = "assets/explosion_4.png"
+EXPLOSION_5_IMG = "assets/explosion_5.png"
+EXPLOSION_6_IMG = "assets/explosion_6.png"
+
+# Array of plane animation images
+plane_animation_imgs = [PLANE_0_2_IMG, PLANE_1_IMG, PLANE_0_2_IMG, PLANE_3_IMG]
+PLANE_FRAMES_PER_IMG = 2
+
+# Array of bullet animation images
+bullet_animation_imgs = [BULLET_0_IMG, BULLET_1_IMG, BULLET_2_IMG, BULLET_3_IMG]
+BULLET_FRAMES_PER_IMG = 3
+
+# Array of explosion animation images
+explosion_animation_imgs = [EXPLOSION_0_IMG, EXPLOSION_1_IMG, EXPLOSION_2_IMG, EXPLOSION_3_IMG, EXPLOSION_4_IMG, EXPLOSION_5_IMG, EXPLOSION_6_IMG]
+EXPLOSION_FRAMES_PER_IMG = 2
+
+# Array of enemy images
+enemy_imgs = [MISSILE_IMG, MISSILE_BIG_IMG]
+# Array of enemy damage
+enemy_dmg = [10, 25]
+enemy_score = [50, 100]
 
 # Array of cloud images
 cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
@@ -81,8 +112,8 @@ cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
 # Array of orb images
 orb_imgs = [ORB_RED_IMG, ORB_YELLOW_IMG, ORB_BLUE_IMG, ORB_GREEN_IMG]
 # Array of orb health bonus effects
-orb_health_bonus = [1, 5, 10, 50]
-orb_score = [5, 10, 50, 100]
+orb_health_bonus = [5, 10, 15, 25]
+orb_score = [50, 100, 200, 500]
 
 # Location of audio assets, relative to project top level directory
 MUSIC_SND   = "assets/music.wav"
@@ -107,7 +138,9 @@ PLAYER_HEALTH_MIN = 0
 class Player(pygame.sprite.Sprite):
    def __init__(self):
       super(Player, self).__init__()
-      self.surf = pygame.image.load(PLANE_IMG).convert()
+      self.frame_cnt = 0
+      self.img_cnt = 0
+      self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
       self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect()
       self.mask = pygame.mask.from_surface(self.surf)
@@ -140,6 +173,17 @@ class Player(pygame.sprite.Sprite):
          self.rect.top = 0
       if self.rect.bottom >= SCREEN_HEIGHT:
          self.rect.bottom = SCREEN_HEIGHT
+
+      # Draw the correct sprite for the animation
+      self.frame_cnt += 1
+      if self.frame_cnt == PLANE_FRAMES_PER_IMG:
+         self.frame_cnt = 0
+         self.img_cnt += 1
+         if self.img_cnt == len(plane_animation_imgs) - 1:
+            self.img_cnt = 0
+         self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
+         self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
+
 
    # Adjust the player's health
    def inc_health(self, amount):
@@ -197,7 +241,9 @@ class Player(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
    def __init__(self, x, y):
       super(Bullet, self).__init__()
-      self.surf = pygame.image.load(BULLET_IMG).convert()
+      self.frame_cnt = 0
+      self.img_cnt = 0
+      self.surf = pygame.image.load(bullet_animation_imgs[self.img_cnt]).convert()
       self.surf.set_colorkey(COLOR_BLACK, RLEACCEL)
       self.rect = self.surf.get_rect(
          center = (
@@ -208,21 +254,60 @@ class Bullet(pygame.sprite.Sprite):
       self.mask = pygame.mask.from_surface(self.surf)
       self.speed = 20
       self.dmg = 10
-      self.score = 0
 
    def update(self):
       self.rect.move_ip(self.speed, 0)
       if self.rect.left > SCREEN_WIDTH:
          self.kill()
 
-   def get_score(self):
-      return self.score
+      # Draw the correct sprite for the animation
+      self.frame_cnt += 1
+      if self.frame_cnt == BULLET_FRAMES_PER_IMG:
+         self.frame_cnt = 0
+         # Latch on the last image
+         if self.img_cnt < len(bullet_animation_imgs) - 1:
+            self.img_cnt += 1
+            self.surf = pygame.image.load(bullet_animation_imgs[self.img_cnt]).convert()
+            self.surf.set_colorkey(COLOR_BLACK, RLEACCEL)
+
+   def get_center(self):
+      return ((self.rect.right - (self.rect.width / 2)),(self.rect.bottom - (self.rect.height / 2)))
+
+# Explosion Class
+class Explosion(pygame.sprite.Sprite):
+   def __init__(self, x, y):
+      super(Explosion, self).__init__()
+      self.frame_cnt = 0
+      self.img_cnt = 0
+      self.surf = pygame.image.load(explosion_animation_imgs[self.img_cnt]).convert()
+      self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
+      self.rect = self.surf.get_rect(
+         center = (
+            # Spawn based on location of bullet
+            x, y
+         )
+      )
+      #self.mask = pygame.mask.from_surface(self.surf)
+
+   def update(self):
+      # Draw the correct sprite for the animation
+      self.frame_cnt += 1
+      if self.frame_cnt == EXPLOSION_FRAMES_PER_IMG:
+         self.frame_cnt = 0
+         # Latch on the last image
+         if self.img_cnt < len(explosion_animation_imgs) - 1:
+            self.img_cnt += 1
+            self.surf = pygame.image.load(explosion_animation_imgs[self.img_cnt]).convert()
+            self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
+         else:
+            self.kill()
 
 # Enemy Class
 class Enemy(pygame.sprite.Sprite):
    def __init__(self):
       super(Enemy, self).__init__()
-      self.surf = pygame.image.load(MISSILE_IMG).convert()
+      self.type = random.randint(0, len(enemy_imgs) - 1)
+      self.surf = pygame.image.load(enemy_imgs[self.type]).convert()
       self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
       self.rect = self.surf.get_rect(
          center = (
@@ -234,8 +319,8 @@ class Enemy(pygame.sprite.Sprite):
       self.speed = random.randint(5, 20)
       #self.path = 0 # TODO: ENUM describing path (LINEAR, SINUSOID, DIAG, RISE, FALL)
       self.health = 1
-      self.dmg = 10
-      self.score = 10
+      self.dmg = enemy_dmg[self.type]
+      self.score = enemy_score[self.type]
 
    # Move the sprite based on speed
    # Remove the sprite when it passes the left edge of the screen
@@ -250,6 +335,9 @@ class Enemy(pygame.sprite.Sprite):
 
    def get_score(self):
       return self.score
+
+   def get_center(self):
+      return ((self.rect.right - (self.rect.width / 2)),(self.rect.bottom - (self.rect.height / 2)))
 
 # Orb Class
 class Orb(pygame.sprite.Sprite):
@@ -316,12 +404,8 @@ class Score(object):
 
    def add(self, amount):
       self.total += amount
-      if amount > 0:
-         ding_sound.play()
-      else:
-         bad_sound.play()
-         if self.total < 0:
-            self.total = 0
+      if self.total < 0:
+         self.total = 0
 
    def blit(self, surf):
       surf.blit(self.text, ((SCREEN_WIDTH / 2) - (self.text.get_width() / 2), self.text.get_height()))
@@ -541,6 +625,9 @@ def game():
          if enemy != None:
             # Check the collision mask for pixel-perfect collision
             if pygame.sprite.spritecollide(player, enemies, True, pygame.sprite.collide_mask):
+               new_explosion = Explosion(*enemy.get_center())
+               explosions.add(new_explosion)
+               all_sprites.add(new_explosion)
                # Apply damage
                player.dec_health(enemy.get_dmg())
                boom_sound.play()
@@ -555,7 +642,14 @@ def game():
                   for i in hits:
                      hit = hits.pop()
                      score.add(hit.get_score())
+                     new_explosion = Explosion(*bullet.get_center())
+                     explosions.add(new_explosion)
+                     all_sprites.add(new_explosion)
                      hit.kill()
+                     bullet.kill()
+
+         # Update explosions
+         explosions.update()
 
          # Check for a collision between the Player and all orbs
          orb = pygame.sprite.spritecollideany(player, orbs)
@@ -578,6 +672,7 @@ def game():
 
          # Check for player death
          if player.get_health() == PLAYER_HEALTH_MIN:
+            # TODO Implement a death animation, or at least allow the final explosions to complete
             # Remove the player
             player.kill()
 
@@ -645,6 +740,7 @@ enemies = pygame.sprite.Group()
 orbs = pygame.sprite.Group()
 clouds = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+explosions = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 # Load and play background music
