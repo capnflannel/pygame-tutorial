@@ -9,6 +9,7 @@ All assets were obtained from https://opengameart.org/
    - Missile: https://opengameart.org/content/missile-32x32
    - Orbs: https://opengameart.org/content/powerup-animated-orb
    - Misc Collection: https://opengameart.org/content/bullet-collection-1-m484
+   - Explosions: https://opengameart.org/content/explosions-2
 - Sounds
    - Music: https://opengameart.org/content/fast-level-loop-8-bit-chiptune
    - Plane: https://opengameart.org/content/airplane-0
