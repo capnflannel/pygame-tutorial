@@ -48,7 +48,7 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Add pause menu
 - [ ] Add options menu
 - [ ] Add selectable difficulty
-- [ ] Add non-linear pathing of projectiles
+- [x] Add non-linear pathing of projectiles
 - [x] Add shooting mechanism
 - [x] Add player health
 - [x] Add power-ups

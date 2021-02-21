@@ -16,6 +16,7 @@
 import pygame  # Import the pygame library
 import random  # Random number generation
 import time    # Sleep functions
+import math    # Maths
 
 # Import pygame.locals for easier access to key coordinates
 from pygame.locals import (
@@ -53,15 +54,17 @@ GAME_FPS_60 = 60
 PLAYER_MOVE_STEP = 10
 
 # Color definitions
-COLOR_BLACK  = (0, 0, 0)
-COLOR_WHITE  = (255, 255, 255)
-COLOR_RED    = (255, 0, 0)
-COLOR_GREEN  = (0, 255, 0)
-COLOR_BLUE   = (0, 0, 255)
-COLOR_SKY    = (135, 206, 250)
-COLOR_GRAY   = (128, 128, 128)
-COLOR_YELLOW = (255, 255, 0)
-COLOR_ORANGE = (255, 128, 0)
+COLOR_BLACK   = (  0,   0,   0)
+COLOR_WHITE   = (255, 255, 255)
+COLOR_RED     = (255,   0,   0)
+COLOR_GREEN   = (  0, 255,   0)
+COLOR_BLUE    = (  0,   0, 255)
+COLOR_SKY     = (135, 206, 250)
+COLOR_GRAY    = (128, 128, 128)
+COLOR_YELLOW  = (255, 255,   0)
+COLOR_ORANGE  = (255, 128,   0)
+COLOR_YEL_GRN = (154, 205,  50)
+COLOR_YEL_ORN = (245, 189,  31)
 
 # Location of graphical assets, relative to project top level directory
 PLANE_0_2_IMG   = "assets/plane_0_2.png"
@@ -114,6 +117,9 @@ orb_imgs = [ORB_RED_IMG, ORB_YELLOW_IMG, ORB_BLUE_IMG, ORB_GREEN_IMG]
 # Array of orb health bonus effects
 orb_health_bonus = [5, 10, 15, 25]
 orb_score = [50, 100, 200, 500]
+
+# Object Movement patterns
+movement_pattern = ["LINEAR", "SINE", "COSINE", "RISE", "FALL"]
 
 # Location of audio assets, relative to project top level directory
 MUSIC_SND   = "assets/music.wav"
@@ -184,7 +190,6 @@ class Player(pygame.sprite.Sprite):
          self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
          self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
 
-
    # Adjust the player's health
    def inc_health(self, amount):
       self.health += amount
@@ -213,11 +218,15 @@ class Player(pygame.sprite.Sprite):
       fill_rect = pygame.Rect(5, 5, bar_fill, height)
       
       # Get the health bar color
-      if self.health >= 75:
+      if self.health >= 80:
          bar_color = COLOR_GREEN
+      elif self.health >= 60:
+         bar_color = COLOR_YEL_GRN
       elif self.health >= 50:
          bar_color = COLOR_YELLOW
-      elif self.health >= 25:
+      elif self.health >= 40:
+         bar_color = COLOR_YEL_ORN
+      elif self.health >= 20:
          bar_color = COLOR_ORANGE
       else:
          bar_color = COLOR_RED
@@ -312,20 +321,35 @@ class Enemy(pygame.sprite.Sprite):
       self.rect = self.surf.get_rect(
          center = (
             random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-            random.randint(0, SCREEN_HEIGHT)
+            random.randint(10, SCREEN_HEIGHT - 10)
          )
       )
       self.mask = pygame.mask.from_surface(self.surf)
-      self.speed = random.randint(5, 20)
-      #self.path = 0 # TODO: ENUM describing path (LINEAR, SINUSOID, DIAG, RISE, FALL)
+      self.speed = random.randint(8, 20)
+      self.path = movement_pattern[random.randint(0, len(movement_pattern) - 1)]
       self.health = 1
       self.dmg = enemy_dmg[self.type]
       self.score = enemy_score[self.type]
 
-   # Move the sprite based on speed
-   # Remove the sprite when it passes the left edge of the screen
+   # Move the sprite based on speed and pattern
    def update(self):
-      self.rect.move_ip(-self.speed, 0)
+      # Linear
+      if self.path == movement_pattern[0]:
+         self.rect.move_ip(-self.speed, 0)
+      # Sine Wave
+      elif self.path == movement_pattern[1]:
+         self.rect.move_ip(-self.speed, 5 * math.sin(self.rect.x / 250))
+      # Cosine Wave
+      elif self.path == movement_pattern[2]:
+         self.rect.move_ip(-self.speed, 5 * math.cos(self.rect.x / 250))
+      # Rising
+      elif self.path == movement_pattern[3]:
+         self.rect.move_ip(-self.speed, -0.01 * self.rect.x)
+      # Falling
+      elif self.path == movement_pattern[4]:
+         self.rect.move_ip(-self.speed, 0.01 * self.rect.x)
+      
+      # Remove the sprite when it passes the left edge of the screen
       if self.rect.right < 0:
          self.kill()
 
