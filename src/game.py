@@ -223,8 +223,8 @@ class Player(pygame.sprite.Sprite):
          bar_color = COLOR_RED
 
       # Draw the rectangles
-      pygame.draw.rect(surf, bar_color, fill_rect)
-      pygame.draw.rect(surf, COLOR_GRAY, bar_rect, 1)
+      pygame.draw.rect(surf, bar_color, fill_rect, border_radius=10)
+      pygame.draw.rect(surf, COLOR_GRAY, bar_rect, 1, border_radius=10)
 
       # Draw the text value of the health
       self.health_text = self.health_font.render("{}/{}".format(self.health, PLAYER_HEALTH_MAX), 1, COLOR_BLACK)
