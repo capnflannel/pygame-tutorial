@@ -152,7 +152,7 @@ class Player(pygame.sprite.Sprite):
       self.mask = pygame.mask.from_surface(self.surf)
       self.health = PLAYER_HEALTH_MAX
       self.exp = 0
-      self.level = 1
+      self.power = 0
       self.health_bar = None
       self.health_font = pygame.font.SysFont("Arial", 12)
       self.health_text = None
@@ -189,6 +189,10 @@ class Player(pygame.sprite.Sprite):
             self.img_cnt = 0
          self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
          self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
+
+   # Adjust the player's power
+   def inc_power(self, amount):
+      self.power += amount
 
    # Adjust the player's health
    def inc_health(self, amount):
@@ -241,14 +245,25 @@ class Player(pygame.sprite.Sprite):
 
    def shoot(self):
       # Spawn bullets from the front rightof the plane
-      new_bullet = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6))
-      bullets.add(new_bullet)
-      all_sprites.add(new_bullet)
+      if self.power > 0:
+         new_bullet_1 = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[0])
+         new_bullet_2 = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[3])
+         new_bullet_3 = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[4])
+         bullets.add(new_bullet_1)
+         all_sprites.add(new_bullet_1)
+         bullets.add(new_bullet_2)
+         all_sprites.add(new_bullet_2)
+         bullets.add(new_bullet_3)
+         all_sprites.add(new_bullet_3)
+      else:
+         new_bullet = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[0])
+         bullets.add(new_bullet)
+         all_sprites.add(new_bullet)
       pew_sound.play()
 
 # Bullet Class
 class Bullet(pygame.sprite.Sprite):
-   def __init__(self, x, y):
+   def __init__(self, x, y, path):
       super(Bullet, self).__init__()
       self.frame_cnt = 0
       self.img_cnt = 0
@@ -263,8 +278,19 @@ class Bullet(pygame.sprite.Sprite):
       self.mask = pygame.mask.from_surface(self.surf)
       self.speed = 20
       self.dmg = 10
+      self.path = path
 
    def update(self):
+      # Linear
+      if self.path == movement_pattern[0]:
+         self.rect.move_ip(self.speed, 0)
+      # Rising
+      elif self.path == movement_pattern[3]:
+         self.rect.move_ip(self.speed, -0.01 * self.rect.x)
+      # Falling
+      elif self.path == movement_pattern[4]:
+         self.rect.move_ip(self.speed, 0.01 * self.rect.x)
+
       self.rect.move_ip(self.speed, 0)
       if self.rect.left > SCREEN_WIDTH:
          self.kill()
@@ -682,6 +708,7 @@ def game():
             if pygame.sprite.spritecollide(player, orbs, True, pygame.sprite.collide_mask):
                # If so, apply the power-up and play a sound
                player.inc_health(orb.get_health_bonus())
+               player.inc_power(1)
                powerup_sound.play()
                score.add(orb.get_score())
 
