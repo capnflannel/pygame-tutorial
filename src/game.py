@@ -34,6 +34,14 @@ from pygame.locals import (
    K_a,        # A Key
    K_d,        # D Key
    K_q,        # Q Key
+   K_KP_1,     # 1 Key
+   K_KP_2,     # 2 Key
+   K_KP_3,     # 3 Key
+   K_KP_4,     # 4 Key
+   K_1,        # 1 Key
+   K_2,        # 2 Key
+   K_3,        # 3 Key
+   K_4,        # 4 Key
    KEYDOWN,    # Keypress Event
    QUIT        # Quit Event
 )
@@ -67,29 +75,33 @@ COLOR_YEL_GRN = (154, 205,  50)
 COLOR_YEL_ORN = (245, 189,  31)
 
 # Location of graphical assets, relative to project top level directory
-PLANE_0_2_IMG   = "assets/plane_0_2.png"
-PLANE_1_IMG     = "assets/plane_1.png"
-PLANE_3_IMG     = "assets/plane_3.png"
-MISSILE_IMG     = "assets/missile.png"
-MISSILE_BIG_IMG = "assets/missile_big.png"
-CLOUD1_IMG      = "assets/cloud1.png"
-CLOUD2_IMG      = "assets/cloud2.png"
-CLOUD3_IMG      = "assets/cloud3.png"
-ORB_RED_IMG     = "assets/red_orb.png"
-ORB_BLUE_IMG    = "assets/blue_orb.png"
-ORB_GREEN_IMG   = "assets/green_orb.png"
-ORB_YELLOW_IMG  = "assets/yellow_orb.png"
-BULLET_0_IMG    = "assets/bullet_0.png"
-BULLET_1_IMG    = "assets/bullet_1.png"
-BULLET_2_IMG    = "assets/bullet_2.png"
-BULLET_3_IMG    = "assets/bullet_3.png"
-EXPLOSION_0_IMG = "assets/explosion_0.png"
-EXPLOSION_1_IMG = "assets/explosion_1.png"
-EXPLOSION_2_IMG = "assets/explosion_2.png"
-EXPLOSION_3_IMG = "assets/explosion_3.png"
-EXPLOSION_4_IMG = "assets/explosion_4.png"
-EXPLOSION_5_IMG = "assets/explosion_5.png"
-EXPLOSION_6_IMG = "assets/explosion_6.png"
+PLANE_0_2_IMG       = "assets/plane_0_2.png"
+PLANE_1_IMG         = "assets/plane_1.png"
+PLANE_3_IMG         = "assets/plane_3.png"
+MISSILE_IMG         = "assets/missile.png"
+MISSILE_BIG_IMG     = "assets/missile_big.png"
+CLOUD1_IMG          = "assets/cloud1.png"
+CLOUD2_IMG          = "assets/cloud2.png"
+CLOUD3_IMG          = "assets/cloud3.png"
+ORB_RED_IMG         = "assets/red_orb.png"
+ORB_BLUE_IMG        = "assets/blue_orb.png"
+ORB_GREEN_IMG       = "assets/green_orb.png"
+ORB_YELLOW_IMG      = "assets/yellow_orb.png"
+ORB_RED_MINI_IMG    = "assets/red_orb_mini.png"
+ORB_BLUE_MINI_IMG   = "assets/blue_orb_mini.png"
+ORB_GREEN_MINI_IMG  = "assets/green_orb_mini.png"
+ORB_YELLOW_MINI_IMG = "assets/yellow_orb_mini.png"
+BULLET_0_IMG        = "assets/bullet_0.png"
+BULLET_1_IMG        = "assets/bullet_1.png"
+BULLET_2_IMG        = "assets/bullet_2.png"
+BULLET_3_IMG        = "assets/bullet_3.png"
+EXPLOSION_0_IMG     = "assets/explosion_0.png"
+EXPLOSION_1_IMG     = "assets/explosion_1.png"
+EXPLOSION_2_IMG     = "assets/explosion_2.png"
+EXPLOSION_3_IMG     = "assets/explosion_3.png"
+EXPLOSION_4_IMG     = "assets/explosion_4.png"
+EXPLOSION_5_IMG     = "assets/explosion_5.png"
+EXPLOSION_6_IMG     = "assets/explosion_6.png"
 
 # Array of plane animation images
 plane_animation_imgs = [PLANE_0_2_IMG, PLANE_1_IMG, PLANE_0_2_IMG, PLANE_3_IMG]
@@ -114,8 +126,8 @@ cloud_imgs = [CLOUD1_IMG, CLOUD2_IMG, CLOUD3_IMG]
 
 # Array of orb images
 orb_imgs = [ORB_RED_IMG, ORB_YELLOW_IMG, ORB_BLUE_IMG, ORB_GREEN_IMG]
-# Array of orb health bonus effects
-orb_health_bonus = [5, 10, 15, 25]
+orb_mini_imgs = [ORB_RED_MINI_IMG, ORB_YELLOW_MINI_IMG, ORB_BLUE_MINI_IMG, ORB_GREEN_MINI_IMG]
+# Array of orb score values
 orb_score = [50, 100, 200, 500]
 
 # Object Movement patterns
@@ -135,6 +147,11 @@ MENU_SND    = "assets/menu_music.ogg"
 # Player health bounds
 PLAYER_HEALTH_MAX = 100
 PLAYER_HEALTH_MIN = 0
+
+# Max power level
+MAX_POWER = 2
+# Max of 1 of each type
+MAX_POWERUPS = 1
 
 #------------------------------
 # Classes
@@ -156,6 +173,8 @@ class Player(pygame.sprite.Sprite):
       self.health_bar = None
       self.health_font = pygame.font.SysFont("Arial", 12)
       self.health_text = None
+      self.powerups = [0, 0, 0, 0]
+      #self.powerups = [100, 100, 100, 100] # For Testing
 
    # Move the Player based on user input
    def update(self, pressed_keys):
@@ -169,6 +188,14 @@ class Player(pygame.sprite.Sprite):
          self.rect.move_ip(PLAYER_MOVE_STEP, 0)
       if pressed_keys[K_SPACE]:
          self.shoot()
+      if pressed_keys[K_KP_1] | pressed_keys[K_1]:
+         self.use_power(0)
+      if pressed_keys[K_KP_2] | pressed_keys[K_2]:
+         self.use_power(1)
+      if pressed_keys[K_KP_3] | pressed_keys[K_3]:
+         self.use_power(2)
+      if pressed_keys[K_KP_4] | pressed_keys[K_4]:
+         self.use_power(3)
 
       # Keep the Player on the screen
       if self.rect.left <= 0:
@@ -190,17 +217,25 @@ class Player(pygame.sprite.Sprite):
          self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
          self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
 
-   # Adjust the player's power
+   # Increment the player's power and add the power-up
    def inc_power(self, amount):
       self.power += amount
+      if self.power > MAX_POWER:
+         self.power = MAX_POWER
 
-   # Adjust the player's health
+   # Collect an orb and add to the power-ups
+   def collect_orb(self, orb_type):
+      # Add the power-up
+      if self.powerups[orb_type] < MAX_POWERUPS:
+         self.powerups[orb_type] += 1
+
+   # Increment the player's health
    def inc_health(self, amount):
       self.health += amount
       if self.health >= PLAYER_HEALTH_MAX:
          self.health = PLAYER_HEALTH_MAX
 
-   # Adjust the player's health
+   # Decrement the player's health
    def dec_health(self, amount):
       self.health -= amount
       if self.health <= PLAYER_HEALTH_MIN:
@@ -210,7 +245,7 @@ class Player(pygame.sprite.Sprite):
    def get_health(self):
       return self.health
 
-   # Draw the player's health bar
+   # Draw the player's health bar and power-ups
    def draw_health_bar(self, surf):
       # Set up bar size parameters
       width = PLAYER_HEALTH_MAX
@@ -243,8 +278,19 @@ class Player(pygame.sprite.Sprite):
       self.health_text = self.health_font.render("{}/{}".format(self.health, PLAYER_HEALTH_MAX), 1, COLOR_BLACK)
       surf.blit(self.health_text, ((bar_rect.left + (bar_rect.width / 2) - (self.health_text.get_width() / 2)), (bar_rect.top + (bar_rect.height / 2) - (self.health_text.get_height() / 2))))
 
+      # Draw available power-ups
+      i = 0
+      for pwrup in self.powerups:
+         if pwrup > 0:
+            # Draw it
+            pwrup_img = pygame.image.load(orb_mini_imgs[i]).convert()
+            pwrup_img.set_colorkey(COLOR_BLACK, RLEACCEL)
+            surf.blit(pwrup_img, (bar_rect.left + 18 + (20 * i), (bar_rect.bottom + 5)))
+         i += 1
+
+   # Shoot!
    def shoot(self):
-      # Spawn bullets from the front rightof the plane
+      # Spawn bullets from the front right of the plane
       if self.power > 0:
          new_bullet_1 = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[0])
          new_bullet_2 = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[3])
@@ -260,6 +306,41 @@ class Player(pygame.sprite.Sprite):
          bullets.add(new_bullet)
          all_sprites.add(new_bullet)
       pew_sound.play()
+
+   def use_power(self, power):
+      if self.powerups[power] > 0:
+         #if power == 0:
+            # TODO: Red Orb: Wave of Death
+            #new_wave = Wave()
+            #waves.add(new_wave)
+            #all_sprites.add(new_wave)
+         if power == 1:
+            # Yellow Orb: Gun Upgrade
+            self.inc_power(1)
+         #elif power == 2:
+            # TODO: Blue Orb: Shield
+            #new_shield = Shield(self.rect.centerx, self.rect.centery)
+            #shields.add(new_shield)
+            #all_sprites.add(new_shield)
+         elif power == 3:
+            # Green Orb: Full Heal
+            self.inc_health(PLAYER_HEALTH_MAX)
+         
+         # Remove the power-up
+         self.powerups[power] -= 1
+
+# TODO: Wave Class
+#class Wave(object):
+#   def __init__(self, center):
+#      self.surf = surf
+#      self.center = surf.get_rect().center
+#      self.radius = surf.get_rect().height / 2
+#      self.circle = pygame.draw.circle(self.surf, COLOR_RED, self.center, self.radius)
+#
+#   def update(self):
+#      if self.radius < SCREEN_WIDTH:
+#         self.radius += 5
+#         self.circle = pygame.draw.circle(self.surf, COLOR_RED, self.center, self.radius)
 
 # Bullet Class
 class Bullet(pygame.sprite.Sprite):
@@ -412,11 +493,11 @@ class Orb(pygame.sprite.Sprite):
       if self.rect.right < 0:
          self.kill()
 
-   def get_health_bonus(self):
-      return orb_health_bonus[self.type]
-
    def get_score(self):
       return orb_score[self.type]
+
+   def get_type(self):
+      return self.type
 
 # Cloud Class
 class Cloud(pygame.sprite.Sprite):
@@ -707,8 +788,7 @@ def game():
             # Check the collision mask for pixel-perfect collision
             if pygame.sprite.spritecollide(player, orbs, True, pygame.sprite.collide_mask):
                # If so, apply the power-up and play a sound
-               player.inc_health(orb.get_health_bonus())
-               player.inc_power(1)
+               player.collect_orb(orb.get_type())
                powerup_sound.play()
                score.add(orb.get_score())
 
