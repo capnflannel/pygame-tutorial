@@ -149,8 +149,8 @@ PLAYER_HEALTH_MAX = 100
 PLAYER_HEALTH_MIN = 0
 
 # Max power level
-MAX_POWER = 2
-# Max of 1 of each type
+MAX_POWER = 1
+# Max of 1 of each type, no stacking
 MAX_POWERUPS = 1
 
 #------------------------------
@@ -218,11 +218,17 @@ class Player(pygame.sprite.Sprite):
          self.surf = pygame.image.load(plane_animation_imgs[self.img_cnt]).convert()
          self.surf.set_colorkey(COLOR_WHITE, RLEACCEL)
 
-   # Increment the player's power and add the power-up
+   # Increment the player's power
    def inc_power(self, amount):
       self.power += amount
       if self.power > MAX_POWER:
          self.power = MAX_POWER
+
+   # Decrement the player's power
+   def dec_power(self, amount):
+      self.power -= amount
+      if self.power < 0:
+         self.power = 0
 
    # Collect an orb and add to the power-ups
    def collect_orb(self, orb_type):
@@ -858,6 +864,7 @@ def game():
                all_sprites.add(new_explosion)
                # Apply damage
                player.dec_health(enemy.get_dmg())
+               player.dec_power(1)
                boom_sound.play()
 
          # Check for a collision between all bullets and enemies
@@ -1000,7 +1007,7 @@ pygame.time.set_timer(ADDCLOUD, 2000)
 
 # Create a custom event for adding orbs
 ADDORB = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDORB, 10000)
+pygame.time.set_timer(ADDORB, 15000)
 
 # Create Groups to hold enemy sprites and all sprited
 # - enemies is used for collision detection and postition updates
