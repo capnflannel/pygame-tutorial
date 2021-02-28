@@ -174,7 +174,8 @@ class Player(pygame.sprite.Sprite):
       self.health_font = pygame.font.SysFont("Arial", 12)
       self.health_text = None
       self.powerups = [0, 0, 0, 0]
-      #self.powerups = [100, 100, 100, 100] # For Testing
+      #self.powerups = [1, 1, 1, 1] # For Testing
+      self.shoot_cnt = 0
 
    # Move the Player based on user input
    def update(self, pressed_keys):
@@ -305,23 +306,25 @@ class Player(pygame.sprite.Sprite):
          new_bullet = Bullet(self.rect.right - (self.rect.width / 4), self.rect.bottom - (self.rect.height / 6), movement_pattern[0])
          bullets.add(new_bullet)
          all_sprites.add(new_bullet)
-      pew_sound.play()
+
+      # Don't play sound for every bullet
+      if self.shoot_cnt % 3 == 0:
+         pew_sound.play()
+      self.shoot_cnt += 1
 
    def use_power(self, power):
       if self.powerups[power] > 0:
-         #if power == 0:
-            # TODO: Red Orb: Wave of Death
-            #new_wave = Wave()
-            #waves.add(new_wave)
-            #all_sprites.add(new_wave)
-         if power == 1:
+         if power == 0:
+            # Red Orb: Wave of Death
+            new_wave = Wave(self.rect.center)
+            waves.append(new_wave)
+         elif power == 1:
             # Yellow Orb: Gun Upgrade
             self.inc_power(1)
-         #elif power == 2:
-            # TODO: Blue Orb: Shield
-            #new_shield = Shield(self.rect.centerx, self.rect.centery)
-            #shields.add(new_shield)
-            #all_sprites.add(new_shield)
+         elif power == 2:
+            # Blue Orb: Shield
+            new_shield = Shield(self.rect.center, self.rect.width, self.rect.height)
+            shields.append(new_shield)
          elif power == 3:
             # Green Orb: Full Heal
             self.inc_health(PLAYER_HEALTH_MAX)
@@ -329,18 +332,92 @@ class Player(pygame.sprite.Sprite):
          # Remove the power-up
          self.powerups[power] -= 1
 
-# TODO: Wave Class
-#class Wave(object):
-#   def __init__(self, center):
-#      self.surf = surf
-#      self.center = surf.get_rect().center
-#      self.radius = surf.get_rect().height / 2
-#      self.circle = pygame.draw.circle(self.surf, COLOR_RED, self.center, self.radius)
-#
-#   def update(self):
-#      if self.radius < SCREEN_WIDTH:
-#         self.radius += 5
-#         self.circle = pygame.draw.circle(self.surf, COLOR_RED, self.center, self.radius)
+# Calculate the diagonal of the screen
+MAX_RADIUS = math.sqrt((SCREEN_WIDTH * SCREEN_WIDTH) + (SCREEN_HEIGHT * SCREEN_HEIGHT))
+# Wave/Ring Class
+class Wave(object):
+   def __init__(self, center):
+      self.center = center
+      self.radius = 10
+      self.alive = True
+      bad_sound.play()
+
+   def update(self):
+      if self.radius < MAX_RADIUS:
+         self.radius += 15
+      else:
+         self.alive = False
+
+   def blit(self, surf):
+      if self.alive == True:
+         self.circle = pygame.draw.circle(surf, COLOR_RED, self.center, self.radius, 5)
+
+   def get_center(self):
+      return self.center
+
+   def get_radius(self):
+      return self.radius
+
+   def is_alive(self):
+      return self.alive
+
+# Define max shield HP
+SHIELD_HP_MAX = 5
+# Shield Class
+class Shield(object):
+   def __init__(self, center, width, height):
+      self.center = center
+      self.x, self.y = self.center
+      self.width = width
+      self.height = height
+      self.radius = 125
+      self.hp = SHIELD_HP_MAX
+      self.r = 0
+      self.g = 0
+      self.b = 255 * (self.hp / SHIELD_HP_MAX)
+      bad_sound.play()
+
+   def update(self, pressed_keys):
+      # Move with player
+      if pressed_keys[K_UP] | pressed_keys[K_w]:
+         self.y -= PLAYER_MOVE_STEP
+      if pressed_keys[K_DOWN] | pressed_keys[K_s]:
+         self.y += PLAYER_MOVE_STEP
+      if pressed_keys[K_LEFT] | pressed_keys[K_a]:
+         self.x -= PLAYER_MOVE_STEP
+      if pressed_keys[K_RIGHT] | pressed_keys[K_d]:
+         self.x += PLAYER_MOVE_STEP
+
+      # Keep the Shield aligned with the player
+      if self.x <= (self.width / 2):
+         self.x = (self.width / 2)
+      if self.x >= (SCREEN_WIDTH - (self.width / 2)):
+         self.x = SCREEN_WIDTH - (self.width / 2)
+      if self.y <= (self.height / 2):
+         self.y = (self.height / 2)
+      if self.y >= SCREEN_HEIGHT - (self.height / 2):
+         self.y = SCREEN_HEIGHT - (self.height / 2)
+
+      # Update the center position
+      self.center = (self.x, self.y)
+
+   def blit(self, surf):
+      self.circle = pygame.draw.circle(surf, (self.r, self.g, self.b), self.center, self.radius, 5)
+
+   def get_center(self):
+      return self.center
+
+   def get_radius(self):
+      return self.radius
+
+   def is_alive(self):
+      return self.hp > 0
+
+   def hit(self):
+      self.hp -= 1
+      self.r = 255 - (255 * (self.hp / SHIELD_HP_MAX))
+      self.b = 255 - (255 * (self.hp / SHIELD_HP_MAX))
+      self.b = 255 * (self.hp / SHIELD_HP_MAX)
 
 # Bullet Class
 class Bullet(pygame.sprite.Sprite):
@@ -732,6 +809,10 @@ def game():
          # Update the player sprite based on user input
          player.update(pressed_keys)
 
+         # Update shield objects
+         for shield in shields:
+            shield.update(pressed_keys)
+
          # Update the bullets
          bullets.update()
 
@@ -744,12 +825,28 @@ def game():
          # Update orb positions
          orbs.update()
 
+         # Update wave objects
+         for wave in waves:
+            wave.update()
+
          # Fill the background (sky blue)
          screen.fill(COLOR_SKY)
 
          # Draw all sprites to the screen
          for entity in all_sprites:
             screen.blit(entity.surf, entity.rect)
+
+         # Draw shield objects to the screen
+         for shield in shields:
+            shield.blit(screen)
+            if shield.is_alive() == False:
+               shields.remove(shield)
+
+         # Draw wave objects to the screen
+         for wave in waves:
+            wave.blit(screen)
+            if wave.is_alive() == False:
+               waves.remove(wave)
 
          # Check for a collision between the Player and all enemies
          enemy = pygame.sprite.spritecollideany(player, enemies)
@@ -778,6 +875,49 @@ def game():
                      all_sprites.add(new_explosion)
                      hit.kill()
                      bullet.kill()
+
+         # Check for a collision between Wave objects and enemies
+         for wave in waves:
+            play_sound = True
+            wave_center_x, wave_center_y = wave.get_center()
+            for enemy in enemies:
+               enemy_center_x, enemy_center_y = enemy.rect.center
+               dist_y = enemy_center_y - wave_center_y
+               dist_x = enemy_center_x - wave_center_x
+               dist = math.sqrt((dist_x * dist_x) + (dist_y * dist_y))
+
+               # Kill the enemy if they are in the circle
+               if dist <= wave.get_radius():
+                  new_explosion = Explosion(*enemy.get_center())
+                  explosions.add(new_explosion)
+                  all_sprites.add(new_explosion)
+                  score.add(enemy.get_score())
+                  enemy.kill()
+                  if play_sound == True:
+                     boom_sound.play()
+                     play_sound = False
+
+         # Check for a collision between Shield objects and enemies
+         for shield in shields:
+            play_sound = True
+            shield_center_x, shield_center_y = shield.get_center()
+            for enemy in enemies:
+               enemy_center_x, enemy_center_y = enemy.rect.center
+               dist_y = enemy_center_y - shield_center_y
+               dist_x = enemy_center_x - shield_center_x
+               dist = math.sqrt((dist_x * dist_x) + (dist_y * dist_y))
+
+               # Kill the enemy if they are in the circle
+               if dist <= shield.get_radius():
+                  new_explosion = Explosion(*enemy.get_center())
+                  explosions.add(new_explosion)
+                  all_sprites.add(new_explosion)
+                  score.add(enemy.get_score())
+                  enemy.kill()
+                  shield.hit()
+                  if play_sound == True:
+                     boom_sound.play()
+                     play_sound = False
 
          # Update explosions
          explosions.update()
@@ -873,6 +1013,12 @@ clouds = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 explosions = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
+
+# Wave object group
+waves = []
+
+# Shield object group
+shields = []
 
 # Load and play background music
 pygame.mixer.music.load(MUSIC_SND)

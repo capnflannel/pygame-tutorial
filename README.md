@@ -54,7 +54,7 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Add power-ups
 - [x] Add animations
 - [ ] Add experience (leveling)
-- [ ] Add shields
+- [x] Add shields
 
 # Retrospective
 TODO: Discuss what went well, what didn't go well, and any lessons learned.
