@@ -378,9 +378,6 @@ class Shield(object):
       self.height = height
       self.radius = 125
       self.hp = SHIELD_HP_MAX
-      self.r = 0
-      self.g = 0
-      self.b = 255 * (self.hp / SHIELD_HP_MAX)
       bad_sound.play()
 
    def update(self, pressed_keys):
@@ -408,7 +405,7 @@ class Shield(object):
       self.center = (self.x, self.y)
 
    def blit(self, surf):
-      self.circle = pygame.draw.circle(surf, (self.r, self.g, self.b), self.center, self.radius, 5)
+      self.circle = pygame.draw.circle(surf, COLOR_BLUE, self.center, self.radius, self.hp+1)
 
    def get_center(self):
       return self.center
@@ -421,9 +418,8 @@ class Shield(object):
 
    def hit(self):
       self.hp -= 1
-      self.r = 255 - (255 * (self.hp / SHIELD_HP_MAX))
-      self.b = 255 - (255 * (self.hp / SHIELD_HP_MAX))
-      self.b = 255 * (self.hp / SHIELD_HP_MAX)
+      if self.hp < 0:
+         self.hp = 0
 
 # Bullet Class
 class Bullet(pygame.sprite.Sprite):
