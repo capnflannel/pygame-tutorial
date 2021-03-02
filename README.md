@@ -53,8 +53,10 @@ All assets are either "hand-drawn" or sourced from https://opengameart.org/
 - [x] Add player health
 - [x] Add power-ups
 - [x] Add animations
-- [ ] Add experience (leveling)
 - [x] Add shields
+- [ ] Add high score list
+- [ ] Add play timer
+- [ ] Add a boss
 
 # Retrospective
 TODO: Discuss what went well, what didn't go well, and any lessons learned.

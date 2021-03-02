@@ -405,7 +405,7 @@ class Shield(object):
       self.center = (self.x, self.y)
 
    def blit(self, surf):
-      self.circle = pygame.draw.circle(surf, COLOR_BLUE, self.center, self.radius, self.hp+1)
+      self.circle = pygame.draw.circle(surf, COLOR_BLUE, self.center, self.radius, self.hp + 1)
 
    def get_center(self):
       return self.center
