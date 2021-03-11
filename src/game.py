@@ -134,15 +134,15 @@ orb_score = [50, 100, 200, 500]
 movement_pattern = ["LINEAR", "SINE", "COSINE", "RISE", "FALL"]
 
 # Location of audio assets, relative to project top level directory
-MUSIC_SND   = "assets/music.wav"
-PLANE_SND   = "assets/plane.ogg"
-BOOM_SND    = "assets/explosion.mp3"
-GAMOVR_SND  = "assets/game_over.ogg"
-DING_SND    = "assets/ding.mp3"
-POWERUP_SND = "assets/powerup.wav"
-BAD_SND     = "assets/bad.wav"
-PEW_SND     = "assets/pew.wav"
-MENU_SND    = "assets/menu_music.ogg"
+MUSIC_SND   = "assets/audio/music.wav"
+PLANE_SND   = "assets/audio/plane.ogg"
+BOOM_SND    = "assets/audio/explosion.mp3"
+GAMOVR_SND  = "assets/audio/game_over.ogg"
+DING_SND    = "assets/audio/ding.mp3"
+POWERUP_SND = "assets/audio/powerup.wav"
+BAD_SND     = "assets/audio/bad.wav"
+PEW_SND     = "assets/audio/pew.wav"
+MENU_SND    = "assets/audio/menu_music.ogg"
 
 # Player health bounds
 PLAYER_HEALTH_MAX = 100
