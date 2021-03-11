@@ -5,10 +5,17 @@
 # Basic Game Design:
 #  -The goal of the game is to avoid incoming obstacles:
 #     -The player starts on the left side of the screen
-#     -The obstacles enter randomly from the right and move left in a straight line
+#     -The obstacles enter randomly from the right and move left in a various flight patterns
 #  -The player can move left, right, up, or down to avoid the obstacles
 #  -The player cannot move off the screen
-#  -The game ends either wheh the player is hit by an obstacle or when the user quits the game
+#  -The player can shoot the obstacles with the SPACE key
+#  -The player can collect four different power-ups, each activated by the corresponding number key:
+#     -(1) Red Orb: Using this item releases a red wave from the player that kills all obstacles in its path
+#     -(2) Yellow Orb: Using this item upgrades the player's gun to shoot a spread of bullets
+#     -(3) Blue Orb: Using this item spawns a blue shield around the player, which depletes when hit
+#     -(4) Green Orb: Using this item heals the player's health back to full
+#  -The user can pause the game with the ESC key
+#  -The game ends either wheh the player's health is depleted to zero or when the user quits the game
 
 #------------------------------
 # Imports
